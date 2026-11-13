@@ -43,6 +43,8 @@ interface Msg {
   text: string;
   createdAt: Timestamp | null;
   hidden: boolean;
+  /** Sender's chosen bubble color, if any. */
+  bubble: string | null;
 }
 
 const REPORT_REASONS = [
@@ -58,6 +60,20 @@ const ONLINE_WINDOW_MS = 90_000;
 const HEARTBEAT_MS = 30_000;
 const MAX_LEN = 400;
 const MIN_SEND_GAP_MS = 1500;
+const HEX = /^#[0-9A-Fa-f]{6}$/;
+
+/** Bubble colors people can pick from. */
+const BUBBLE_COLORS = [
+  '#FF4D6D', '#FF7A45', '#F5B301', '#7BC62D', '#12A064', '#14B8A6',
+  '#38A9F5', '#4F6BF2', '#8B5CF6', '#D946EF', '#FF2D95', '#6B7280',
+];
+
+/** Readable text color (white or near-black) for a given bubble color. */
+function textOn(hex: string): string {
+  const n = parseInt(hex.slice(1), 16);
+  const lum = (0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
+  return lum > 0.62 ? '#2B2233' : '#FFFFFF';
+}
 
 const RULES = [
   'Be kind. No harassment, hate or bullying.',
@@ -85,6 +101,7 @@ export function ChatRoom() {
   const [nick, setNick] = useState(settings.nickname);
   const [reportedIds, setReportedIds] = useState<string[]>([]);
   const [reporting, setReporting] = useState<Msg | null>(null);
+  const [pickingColor, setPickingColor] = useState(false);
   const lastSent = useRef(0);
 
   // Chat requires a real, verified Google/Apple account. Anonymous sessions count as signed out.
@@ -166,6 +183,7 @@ export function ChatRoom() {
               text: v.text,
               createdAt: v.createdAt ?? null,
               hidden: v.hidden === true,
+              bubble: typeof v.bubble === 'string' && HEX.test(v.bubble) ? v.bubble : null,
             };
           }),
         ),
@@ -220,17 +238,24 @@ export function ChatRoom() {
     if (Date.now() - lastSent.current < MIN_SEND_GAP_MS) return;
     lastSent.current = Date.now();
     setText('');
+    const base = {
+      uid,
+      key: myKey,
+      nickname: settings.nickname,
+      text: body.slice(0, MAX_LEN),
+      createdAt: serverTimestamp(),
+    };
     try {
-      await addDoc(collection(fb.db, 'lobby'), {
-        uid,
-        key: myKey,
-        nickname: settings.nickname,
-        text: body.slice(0, MAX_LEN),
-        createdAt: serverTimestamp(),
-      });
+      await addDoc(collection(fb.db, 'lobby'), settings.bubbleColor ? { ...base, bubble: settings.bubbleColor } : base);
     } catch {
-      setText(body);
-      Alert.alert('Couldn’t send', 'Check your connection and try again.');
+      try {
+        // If the server doesn't accept bubble colors yet, still deliver the message.
+        if (!settings.bubbleColor) throw new Error('send failed');
+        await addDoc(collection(fb.db, 'lobby'), base);
+      } catch {
+        setText(body);
+        Alert.alert('Couldn’t send', 'Check your connection and try again.');
+      }
     }
   };
 
@@ -387,6 +412,9 @@ export function ChatRoom() {
       <View style={styles.header}>
         <View style={styles.onlineDot} />
         <Text style={styles.headerText}>{Math.max(online, 1)} online · Long-press a message to report/block</Text>
+        <Pressable onPress={() => setPickingColor(true)} hitSlop={8}>
+          <Text style={styles.headerText}>🎨 Bubbles</Text>
+        </Pressable>
         <Pressable
           onPress={() =>
             Alert.alert('Account', settings.nickname, [
@@ -422,12 +450,13 @@ export function ChatRoom() {
         contentContainerStyle={{ padding: 12 }}
         renderItem={({ item }) => {
           const mine = item.uid === uid;
+          const tint = mine ? settings.bubbleColor ?? colors.primary : item.bubble;
           return (
             <Pressable onLongPress={() => onLongPress(item)} delayLongPress={350}>
               <View style={[styles.bubbleWrap, mine && { alignItems: 'flex-end' }]}>
                 {!mine && <Text style={styles.nick}>{item.nickname}</Text>}
-                <View style={[styles.bubble, mine ? styles.mine : styles.theirs]}>
-                  <Text style={[styles.msg, mine && { color: '#fff' }]}>{item.text}</Text>
+                <View style={[styles.bubble, mine ? styles.mine : styles.theirs, tint ? { backgroundColor: tint, borderColor: tint } : null]}>
+                  <Text style={[styles.msg, tint ? { color: textOn(tint) } : null]}>{item.text}</Text>
                 </View>
               </View>
             </Pressable>
@@ -449,6 +478,35 @@ export function ChatRoom() {
           <Text style={styles.sendText}>Send</Text>
         </Pressable>
       </View>
+
+      <Modal transparent animationType="fade" visible={pickingColor} onRequestClose={() => setPickingColor(false)}>
+        <View style={styles.warnBackdrop}>
+          <View style={styles.warnCard}>
+            <Text style={styles.warnTitle}>Your bubble color 🎨</Text>
+            <Text style={styles.warnText}>Everyone in the chat sees your messages in this color.</Text>
+            <View style={[styles.bubble, styles.mine, { alignSelf: 'center', marginBottom: 14, backgroundColor: settings.bubbleColor ?? colors.primary }]}>
+              <Text style={[styles.msg, { color: textOn(settings.bubbleColor ?? colors.primary) }]}>Hi everyone! 👋</Text>
+            </View>
+            <View style={styles.swatchRow}>
+              {BUBBLE_COLORS.map((c) => (
+                <Pressable
+                  key={c}
+                  accessibilityLabel={`Bubble color ${c}`}
+                  onPress={() => updateSettings({ bubbleColor: c })}
+                  style={[styles.swatch, { backgroundColor: c }, settings.bubbleColor === c && styles.swatchOn]}
+                />
+              ))}
+            </View>
+            <Button
+              title="Match my theme"
+              kind="secondary"
+              onPress={() => updateSettings({ bubbleColor: null })}
+              style={{ marginTop: 12 }}
+            />
+            <Button title="Done" onPress={() => setPickingColor(false)} style={{ marginTop: 8 }} />
+          </View>
+        </View>
+      </Modal>
 
       <Modal transparent animationType="slide" visible={reporting !== null} onRequestClose={() => setReporting(null)}>
         <View style={styles.warnBackdrop}>
@@ -495,4 +553,7 @@ const styles = themedStyles(() => StyleSheet.create({
   warnText: { color: colors.muted, textAlign: 'center', lineHeight: 21, marginBottom: 16 },
   reason: { backgroundColor: colors.chipBg, borderRadius: radius.sm, padding: 14, marginBottom: 8 },
   reasonText: { color: colors.text, fontWeight: '700' },
+  swatchRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 12 },
+  swatch: { width: 40, height: 40, borderRadius: 20, borderWidth: 3, borderColor: 'transparent' },
+  swatchOn: { borderColor: colors.text },
 }));
