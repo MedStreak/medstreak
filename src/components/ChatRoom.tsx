@@ -414,12 +414,12 @@ export function ChatRoom() {
         </Pressable>
       </View>
 
+      {visible.length === 0 && <Text style={styles.empty}>No messages yet. Say hi! 👋</Text>}
       <FlatList
         data={visible}
         inverted
         keyExtractor={(m) => m.id}
         contentContainerStyle={{ padding: 12 }}
-        ListEmptyComponent={<Text style={styles.empty}>No messages yet. Say hi! 👋</Text>}
         renderItem={({ item }) => {
           const mine = item.uid === uid;
           return (
@@ -477,7 +477,7 @@ const styles = themedStyles(() => StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, paddingVertical: 8, backgroundColor: colors.chipBg },
   onlineDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.success },
   headerText: { color: colors.text, fontSize: 12, fontWeight: '600', flexShrink: 1 },
-  empty: { textAlign: 'center', color: colors.muted, marginTop: 40, transform: [{ scaleY: -1 }] },
+  empty: { textAlign: 'center', color: colors.muted, marginTop: 40, position: 'absolute', left: 0, right: 0, top: 90 },
   bubbleWrap: { marginVertical: 4, alignItems: 'flex-start' },
   nick: { fontSize: 12, color: colors.muted, marginLeft: 8, marginBottom: 2, fontWeight: '700' },
   bubble: { maxWidth: '82%', paddingVertical: 8, paddingHorizontal: 12, borderRadius: 18 },
