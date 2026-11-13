@@ -45,6 +45,7 @@ export const defaultSettings: Settings = {
   theme: 'sunrise',
   accent: null,
   corners: 'soft',
+  bubbleColor: null,
 };
 
 const emptyState: Persisted = { meds: [], logs: {}, goals: [], settings: defaultSettings };
