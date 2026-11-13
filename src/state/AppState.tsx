@@ -43,6 +43,8 @@ export const defaultSettings: Settings = {
   lastPromptDate: null,
   celebratedMilestones: [],
   theme: 'sunrise',
+  accent: null,
+  corners: 'soft',
 };
 
 const emptyState: Persisted = { meds: [], logs: {}, goals: [], settings: defaultSettings };
