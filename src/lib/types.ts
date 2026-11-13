@@ -51,6 +51,8 @@ export interface Settings {
   accent: string | null;
   /** Corner style: sharp | soft | round. */
   corners: string;
+  /** My chat bubble color (hex), or null to match my theme. */
+  bubbleColor: string | null;
 }
 
 export interface Persisted {
