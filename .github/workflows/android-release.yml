@@ -42,7 +42,7 @@ jobs:
       - name: Decode signing key
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-        run: echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+        run: printf '%s' "$ANDROID_KEYSTORE_BASE64" | tr -d ' \r\n"' | base64 -d > "$RUNNER_TEMP/release.jks"
 
       - name: Configure release signing
         run: python3 scripts/sign-android.py
