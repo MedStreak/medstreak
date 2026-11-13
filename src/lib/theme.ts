@@ -33,27 +33,27 @@ const darkBase = { success: '#3DD598', warn: '#FFB84D', danger: '#FF6B70', refil
 export const THEMES: ThemeDef[] = [
   {
     id: 'sunrise', name: 'Sunrise', emoji: '🌅', mascot: '🔥', dark: false,
-    colors: { ...base, bg: '#FFF1E6', card: '#FFFFFF', text: '#2B2233', muted: '#7C7287', primary: '#FF7A45', primaryDark: '#E4592A', accent: '#6C5CE7', border: '#F7D9C4', chipBg: '#FFE2CF', hero: '#FF7A45' },
+    colors: { ...base, bg: '#FFE3CC', card: '#FFFFFF', text: '#2B2233', muted: '#7C7287', primary: '#FF7A45', primaryDark: '#E4592A', accent: '#6C5CE7', border: '#F7D9C4', chipBg: '#FFE2CF', hero: '#FF7A45' },
   },
   {
     id: 'bubblegum', name: 'Bubblegum', emoji: '🍬', mascot: '🍭', dark: false,
-    colors: { ...base, bg: '#FFE3F0', card: '#FFF8FC', text: '#4A1D3A', muted: '#9A6683', primary: '#F2428C', primaryDark: '#C91D6B', accent: '#9B5CF6', border: '#F9B8D6', chipBg: '#FFCFE6', hero: '#F2428C' },
+    colors: { ...base, bg: '#FFD0E8', card: '#FFF8FC', text: '#4A1D3A', muted: '#9A6683', primary: '#F2428C', primaryDark: '#C91D6B', accent: '#9B5CF6', border: '#F9B8D6', chipBg: '#FFCFE6', hero: '#F2428C' },
   },
   {
     id: 'ocean', name: 'Ocean', emoji: '🌊', mascot: '🐳', dark: false,
-    colors: { ...base, bg: '#D9EEFF', card: '#F5FAFF', text: '#0F2A44', muted: '#5C7A94', primary: '#1E78E6', primaryDark: '#1458B5', accent: '#00A99D', border: '#A9D2F5', chipBg: '#BFE0FF', hero: '#1E78E6' },
+    colors: { ...base, bg: '#C4E6FF', card: '#F5FAFF', text: '#0F2A44', muted: '#5C7A94', primary: '#1E78E6', primaryDark: '#1458B5', accent: '#00A99D', border: '#A9D2F5', chipBg: '#BFE0FF', hero: '#1E78E6' },
   },
   {
     id: 'mint', name: 'Mint', emoji: '🍃', mascot: '🌿', dark: false,
-    colors: { ...base, bg: '#DDF7E8', card: '#F6FFF9', text: '#12382A', muted: '#5C8070', primary: '#12A064', primaryDark: '#0B7B4A', accent: '#E69A0C', border: '#A8E3C4', chipBg: '#C4F0D8', hero: '#12A064' },
+    colors: { ...base, bg: '#C9F7DE', card: '#F6FFF9', text: '#12382A', muted: '#5C8070', primary: '#12A064', primaryDark: '#0B7B4A', accent: '#E69A0C', border: '#A8E3C4', chipBg: '#C4F0D8', hero: '#12A064' },
   },
   {
     id: 'lavender', name: 'Lavender', emoji: '🔮', mascot: '🦄', dark: false,
-    colors: { ...base, bg: '#E9E0FF', card: '#FAF7FF', text: '#2A2058', muted: '#7A6FAE', primary: '#7050F2', primaryDark: '#5233D1', accent: '#F2548F', border: '#CDBFF7', chipBg: '#DBCFFF', hero: '#7050F2' },
+    colors: { ...base, bg: '#DDD0FF', card: '#FAF7FF', text: '#2A2058', muted: '#7A6FAE', primary: '#7050F2', primaryDark: '#5233D1', accent: '#F2548F', border: '#CDBFF7', chipBg: '#DBCFFF', hero: '#7050F2' },
   },
   {
     id: 'sunflower', name: 'Sunflower', emoji: '🌻', mascot: '🌻', dark: false,
-    colors: { ...base, bg: '#FFF3B8', card: '#FFFDF0', text: '#3D2F00', muted: '#8A7420', primary: '#F0A500', primaryDark: '#C27E00', accent: '#5B7B2E', border: '#F2DA6A', chipBg: '#FFE98A', hero: '#F0A500' },
+    colors: { ...base, bg: '#FFEC8A', card: '#FFFDF0', text: '#3D2F00', muted: '#8A7420', primary: '#F0A500', primaryDark: '#C27E00', accent: '#5B7B2E', border: '#F2DA6A', chipBg: '#FFE98A', hero: '#F0A500' },
   },
   {
     id: 'cherry', name: 'Cherry', emoji: '🍒', mascot: '🍒', dark: false,
@@ -78,6 +78,34 @@ export const THEMES: ThemeDef[] = [
   {
     id: 'noir', name: 'Noir', emoji: '🖤', mascot: '🐈‍⬛', dark: true,
     colors: { ...darkBase, bg: '#0B0B0D', card: '#17171B', text: '#F2F2F4', muted: '#9A9AA5', primary: '#FF4D6D', primaryDark: '#E02E51', accent: '#FFD166', border: '#2A2A31', chipBg: '#202026', hero: '#2B2B33' },
+  },
+  {
+    id: 'rainbow', name: 'Rainbow', emoji: '🌈', mascot: '🌈', dark: false,
+    colors: { ...base, bg: '#FFF6A8', card: '#FFFFFF', text: '#2B1B4D', muted: '#7A5FA8', primary: '#FF2D95', primaryDark: '#D40F77', accent: '#00BFFF', border: '#FFD54D', chipBg: '#FFE066', hero: '#8A3FFC' },
+  },
+  {
+    id: 'tiedye', name: 'Tie-Dye', emoji: '🌀', mascot: '🌀', dark: false,
+    colors: { ...base, bg: '#EBC8FF', card: '#FFF5FF', text: '#3A0F5C', muted: '#8A4FB5', primary: '#FF4DA6', primaryDark: '#D92B86', accent: '#14D8C8', border: '#D79BFF', chipBg: '#FFC2EE', hero: '#7B2FF7' },
+  },
+  {
+    id: 'groovy', name: 'Groovy 70s', emoji: '☮️', mascot: '✌️', dark: false,
+    colors: { ...base, bg: '#FFDB8A', card: '#FFF6DE', text: '#4A2000', muted: '#9A6A2A', primary: '#FF6A00', primaryDark: '#D14E00', accent: '#00A88F', border: '#F2B84B', chipBg: '#FFC95C', hero: '#D9480F' },
+  },
+  {
+    id: 'flowerpower', name: 'Flower Power', emoji: '🌼', mascot: '🌼', dark: false,
+    colors: { ...base, bg: '#D6FF8F', card: '#FAFFEA', text: '#1B3500', muted: '#58802A', primary: '#FF3DA0', primaryDark: '#D11E80', accent: '#FFAA00', border: '#A8E64D', chipBg: '#BFF560', hero: '#2FAE2F' },
+  },
+  {
+    id: 'sunsethaze', name: 'Sunset Haze', emoji: '🌇', mascot: '🌇', dark: false,
+    colors: { ...base, bg: '#FFC9D6', card: '#FFF3F6', text: '#4A0E2E', muted: '#A55A78', primary: '#FF5A36', primaryDark: '#D93C1A', accent: '#8A3FFC', border: '#FF9DB8', chipBg: '#FFB1C6', hero: '#FF4E7E' },
+  },
+  {
+    id: 'chillzone', name: 'Chill Zone', emoji: '🌿', mascot: '🍃', dark: true,
+    colors: { ...darkBase, bg: '#08170D', card: '#12301B', text: '#EAFFE0', muted: '#8FC48A', primary: '#1DB954', primaryDark: '#0F9A3E', accent: '#FF6AD5', border: '#20502C', chipBg: '#194024', hero: '#1B9A3C' },
+  },
+  {
+    id: 'trippy', name: 'Trippy', emoji: '🍄', mascot: '🍄', dark: true,
+    colors: { ...darkBase, bg: '#1A0838', card: '#2D1259', text: '#FFF0FF', muted: '#C79BFF', primary: '#FF2EC4', primaryDark: '#D60FA2', accent: '#27F5E3', border: '#4B2090', chipBg: '#3A1773', hero: '#7B1FA2' },
   },
 ];
 
