@@ -71,12 +71,13 @@ service cloud.firestore {
     match /lobby/{msgId} {
       allow read: if canChat();
       allow create: if canChat()
-        && request.resource.data.keys().hasOnly(['uid', 'key', 'nickname', 'text', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['uid', 'key', 'nickname', 'text', 'createdAt', 'bubble'])
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.key == myKey()
         && request.resource.data.text is string
         && request.resource.data.text.size() > 0
         && request.resource.data.text.size() <= 400
+        && (!('bubble' in request.resource.data) || (request.resource.data.bubble is string && request.resource.data.bubble.matches('^#[0-9A-Fa-f]{6}$')))
         && request.resource.data.nickname is string
         && request.resource.data.nickname.size() > 0
         && request.resource.data.nickname.size() <= 20
