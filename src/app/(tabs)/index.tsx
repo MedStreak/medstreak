@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -75,7 +74,7 @@ export default function TodayScreen() {
                   {s.med.dosage ? ` · ${s.med.dosage}` : ''}
                 </Text>
               </View>
-              <Ionicons name={taken ? 'checkmark-circle' : 'ellipse-outline'} size={32} color={taken ? colors.success : colors.border} />
+              <Text style={styles.check}>{taken ? '💖' : '🤍'}</Text>
             </Card>
           </Pressable>
         );
@@ -109,6 +108,7 @@ const styles = themedStyles(() => StyleSheet.create({
   refillText: { color: colors.text, fontWeight: '600' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   rowDone: { opacity: 0.65 },
+  check: { fontSize: 30 },
   dot: { width: 12, height: 40, borderRadius: 6 },
   medName: { fontSize: 17, fontWeight: '700', color: colors.text },
   medSub: { color: colors.muted, marginTop: 2 },

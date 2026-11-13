@@ -1,24 +1,26 @@
-import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import React from 'react';
-import type { ColorValue } from 'react-native';
-import { colors } from '../../lib/theme';
+import { Text } from 'react-native';
+import { colors, getTheme } from '../../lib/theme';
+import { useApp } from '../../state/AppState';
 
-type IconName = React.ComponentProps<typeof Ionicons>['name'];
-
-const tab = (title: string, icon: IconName) => ({
+/** Cute emoji tab icons: full-color when selected, softly faded otherwise. */
+const tab = (title: string, emoji: string) => ({
   title,
-  tabBarIcon: ({ color, size }: { color: ColorValue; size: number }) => (
-    <Ionicons name={icon} color={color as string} size={size} />
+  tabBarIcon: ({ focused }: { focused: boolean }) => (
+    <Text style={{ fontSize: focused ? 28 : 23, opacity: focused ? 1 : 0.55 }}>{emoji}</Text>
   ),
 });
 
 export default function TabsLayout() {
+  const { data } = useApp();
+  const mascot = getTheme(data.settings.theme).mascot;
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.muted,
+        tabBarLabelStyle: { fontWeight: '700' },
         headerStyle: { backgroundColor: colors.bg },
         headerShadowVisible: false,
         headerTitleStyle: { fontWeight: '800', color: colors.text },
@@ -26,12 +28,12 @@ export default function TabsLayout() {
         tabBarStyle: { backgroundColor: colors.card, borderTopColor: colors.border },
       }}
     >
-      <Tabs.Screen name="index" options={tab('Today', 'flame')} />
-      <Tabs.Screen name="meds" options={tab('Meds', 'medkit')} />
-      <Tabs.Screen name="calendar" options={tab('History', 'calendar')} />
-      <Tabs.Screen name="goals" options={tab('Goals', 'trophy')} />
-      <Tabs.Screen name="chat" options={tab('Chat', 'chatbubbles')} />
-      <Tabs.Screen name="themes" options={tab('Themes', 'color-palette')} />
+      <Tabs.Screen name="index" options={tab('Today', mascot)} />
+      <Tabs.Screen name="meds" options={tab('Meds', '💊')} />
+      <Tabs.Screen name="calendar" options={tab('History', '🗓️')} />
+      <Tabs.Screen name="goals" options={tab('Goals', '🏆')} />
+      <Tabs.Screen name="chat" options={tab('Chat', '💬')} />
+      <Tabs.Screen name="themes" options={tab('Themes', '🎨')} />
     </Tabs>
   );
 }
