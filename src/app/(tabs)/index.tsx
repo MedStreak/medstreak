@@ -4,7 +4,7 @@ import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Button, Card, ProgressBar, SectionTitle } from '../../components/ui';
 import { formatTime } from '../../lib/dates';
-import { colors, themedStyles } from '../../lib/theme';
+import { colors, getTheme, themedStyles } from '../../lib/theme';
 import { dosesForDay, motivationalMessage, nextMilestone } from '../../lib/streak';
 import { useApp } from '../../state/AppState';
 
@@ -36,7 +36,7 @@ export default function TodayScreen() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Card style={styles.streakCard}>
-        <Text style={styles.flame}>🔥</Text>
+        <Text style={styles.flame}>{getTheme(data.settings.theme).mascot}</Text>
         <Text style={styles.streakNum}>{streak.current}</Text>
         <Text style={styles.streakLabel}>day streak</Text>
         <View style={styles.statsRow}>
@@ -97,7 +97,7 @@ export default function TodayScreen() {
 
 const styles = themedStyles(() => StyleSheet.create({
   container: { padding: 16, paddingBottom: 40 },
-  streakCard: { backgroundColor: colors.primary, alignItems: 'center', borderColor: colors.primary, paddingVertical: 22 },
+  streakCard: { backgroundColor: colors.hero, alignItems: 'center', borderColor: colors.hero, paddingVertical: 22 },
   flame: { fontSize: 40 },
   streakNum: { fontSize: 64, fontWeight: '900', color: '#fff', lineHeight: 70 },
   streakLabel: { color: '#fff', fontSize: 16, fontWeight: '700', opacity: 0.9 },
