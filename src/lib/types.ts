@@ -47,6 +47,10 @@ export interface Settings {
   celebratedMilestones: string[];
   /** Selected color theme id. */
   theme: string;
+  /** Accent color id overriding the theme's main color, or null for the theme's own. */
+  accent: string | null;
+  /** Corner style: sharp | soft | round. */
+  corners: string;
 }
 
 export interface Persisted {
