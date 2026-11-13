@@ -5,15 +5,16 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { CelebrationOverlay } from '../components/CelebrationOverlay';
 import { CheckInModal } from '../components/CheckInModal';
 import { NotificationResponder } from '../components/NotificationResponder';
-import { applyTheme, colors } from '../lib/theme';
+import { applyLook, colors } from '../lib/theme';
 import { AppProvider, useApp } from '../state/AppState';
 
 /** Applies the chosen theme and remounts the screens when it changes so every colour updates. */
 function Themed() {
   const { data } = useApp();
-  const theme = applyTheme(data.settings.theme);
+  const { theme: themeId, accent, corners } = data.settings;
+  const theme = applyLook({ theme: themeId, accent, corners });
   return (
-    <React.Fragment key={theme.id}>
+    <React.Fragment key={`${theme.id}|${accent ?? ''}|${corners}`}>
       <StatusBar style={theme.dark ? 'light' : 'dark'} />
       <Stack screenOptions={{ headerTintColor: colors.text, contentStyle: { backgroundColor: colors.bg } }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
