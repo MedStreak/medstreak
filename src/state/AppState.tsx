@@ -11,7 +11,7 @@ import React, {
 } from 'react';
 import { AppState as RNAppState, Platform } from 'react-native';
 import { dateKey } from '../lib/dates';
-import { THEMES } from '../lib/theme';
+import { DEFAULT_CUSTOM, THEMES } from '../lib/theme';
 import { ensurePermission, notifyRefill, rescheduleAll, setupNotifications } from '../lib/notifications';
 import {
   MILESTONES,
@@ -48,6 +48,8 @@ export const defaultSettings: Settings = {
   corners: 'soft',
   bubbleColor: null,
   frozenDays: [],
+  customTheme: DEFAULT_CUSTOM,
+  particle: null,
   unlockedThemes: [],
 };
 
@@ -163,7 +165,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       } catch {}
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loaded, meds, settings.remindersOn, settings.checkInHour, settings.checkInMinute]);
+  }, [loaded, meds, settings.remindersOn, settings.checkInHour, settings.checkInMinute, foregroundTick]);
 
   const streak = useMemo(() => computeStreak(data.meds, data.logs, today, data.settings.frozenDays),
     [data.meds, data.logs, today, data.settings.frozenDays],
