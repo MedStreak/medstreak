@@ -4,9 +4,15 @@ import React from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { CelebrationOverlay } from '../components/CelebrationOverlay';
 import { CheckInModal } from '../components/CheckInModal';
+import { CrashPrompt } from '../components/CrashPrompt';
+import { ErrorBoundary } from '../components/ErrorBoundary';
+import { ThemeFx } from '../components/ThemeFx';
+import { installCrashHandler } from '../lib/crash';
 import { NotificationResponder } from '../components/NotificationResponder';
 import { applyLook, colors } from '../lib/theme';
 import { AppProvider, useApp } from '../state/AppState';
+
+installCrashHandler();
 
 /** Applies the chosen theme and remounts the screens when it changes so every colour updates. */
 function Themed() {
@@ -31,6 +37,8 @@ function Themed() {
       <NotificationResponder />
       <CheckInModal />
       <CelebrationOverlay />
+      <ThemeFx fx={theme.fx} />
+      <CrashPrompt />
     </React.Fragment>
   );
 }
@@ -38,9 +46,11 @@ function Themed() {
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
-      <AppProvider>
-        <Themed />
-      </AppProvider>
+      <ErrorBoundary>
+        <AppProvider>
+          <Themed />
+        </AppProvider>
+      </ErrorBoundary>
     </SafeAreaProvider>
   );
 }
