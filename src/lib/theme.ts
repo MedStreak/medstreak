@@ -27,12 +27,23 @@ export interface ThemeDef {
   /** Best streak (days) needed to unlock this theme. Unset = free. */
   unlock?: number;
   /** Animated effect drawn over the app. */
-  fx?: 'petals' | 'stars' | 'bubbles' | 'aurora' | 'rainbow';
+  fx?: 'aurora' | 'rainbow';
+  /** Falling / rising / drifting particle id (see ThemeFx PARTICLES). */
+  particle?: string;
+  /** Particle speed multiplier (1 = normal). */
+  speed?: number;
+  /** Bundled font key (see fonts.ts). */
+  font?: string;
   colors: Palette;
 }
 
 const base = { success: '#2EB67D', warn: '#F5A524', danger: '#E5484D', refillBg: '#FFF4D6', refillBorder: '#F5D98B' };
 const darkBase = { success: '#3DD598', warn: '#FFB84D', danger: '#FF6B70', refillBg: '#3A3020', refillBorder: '#6B5A2E' };
+
+/** Short palette builder for the newer themes: background, card, text, main color, button tint, border, hero. */
+function pal(dark: boolean, bg: string, card: string, text: string, muted: string, primary: string, primaryDark: string, accent: string, chipBg: string, border: string, hero?: string): Palette {
+  return { ...(dark ? darkBase : base), bg, card, text, muted, primary, primaryDark, accent, border, chipBg, hero: hero ?? primary };
+}
 
 export const THEMES: ThemeDef[] = [
   {
@@ -112,26 +123,94 @@ export const THEMES: ThemeDef[] = [
     colors: { ...darkBase, bg: '#1A0838', card: '#2D1259', text: '#FFF0FF', muted: '#C79BFF', primary: '#FF2EC4', primaryDark: '#D60FA2', accent: '#27F5E3', border: '#4B2090', chipBg: '#3A1773', hero: '#7B1FA2' },
   },
   {
-    id: 'sakura', name: 'Sakura Drift', emoji: '🌸', mascot: '🌸', dark: false, unlock: 3, fx: 'petals',
+    id: 'sakura', name: 'Sakura Drift', emoji: '🌸', mascot: '🌸', dark: false, unlock: 3, particle: 'petals', font: 'pacifico',
     colors: { ...base, bg: '#FFE3EE', card: '#FFF8FB', text: '#4A1530', muted: '#A76A87', primary: '#F0589A', primaryDark: '#D23880', accent: '#7BC6A4', border: '#F8BDD6', chipBg: '#FFD0E3', hero: '#F4709F' },
   },
   {
-    id: 'aurora', name: 'Aurora', emoji: '🌌', mascot: '🦉', dark: true, unlock: 7, fx: 'aurora',
+    id: 'aurora', name: 'Aurora', emoji: '🌌', mascot: '🦉', dark: true, unlock: 7, fx: 'aurora', particle: 'sparkles', font: 'comfortaa',
     colors: { ...darkBase, bg: '#07162B', card: '#0F2440', text: '#E6FFF7', muted: '#86B7C9', primary: '#14B88A', primaryDark: '#0E8F6B', accent: '#8C7CFF', border: '#1B3A5E', chipBg: '#14304F', hero: '#0F9D8A' },
   },
   {
-    id: 'starfall', name: 'Starfall', emoji: '🌠', mascot: '⭐', dark: true, unlock: 14, fx: 'stars',
+    id: 'starfall', name: 'Starfall', emoji: '🌠', mascot: '⭐', dark: true, unlock: 14, particle: 'stars', font: 'bubblegum',
     colors: { ...darkBase, bg: '#0A0820', card: '#171340', text: '#F2F0FF', muted: '#A9A4E0', primary: '#7C5CFF', primaryDark: '#5B3DE0', accent: '#FFD24D', border: '#2A2468', chipBg: '#201A58', hero: '#4B2FB8' },
   },
   {
-    id: 'lavalamp', name: 'Lava Lamp', emoji: '🫠', mascot: '🔮', dark: true, unlock: 30, fx: 'bubbles',
+    id: 'lavalamp', name: 'Lava Lamp', emoji: '🫠', mascot: '🔮', dark: true, unlock: 30, particle: 'bubbles', font: 'chewy',
     colors: { ...darkBase, bg: '#2A0A3D', card: '#431563', text: '#FFF1E6', muted: '#E0A8D0', primary: '#FF6B35', primaryDark: '#E04F1B', accent: '#FFD23F', border: '#6A2A8F', chipBg: '#521A78', hero: '#C2185B' },
   },
   {
-    id: 'rainbowwave', name: 'Rainbow Wave', emoji: '🏳️‍🌈', mascot: '🌈', dark: false, unlock: 60, fx: 'rainbow',
+    id: 'rainbowwave', name: 'Rainbow Wave', emoji: '🏳️‍🌈', mascot: '🌈', dark: false, unlock: 60, fx: 'rainbow', particle: 'confetti', font: 'baloo',
     colors: { ...base, bg: '#FFF3FF', card: '#FFFFFF', text: '#2B1B4D', muted: '#7A5FA8', primary: '#FF2D95', primaryDark: '#D40F77', accent: '#00BFFF', border: '#F2C6F2', chipBg: '#FFE0FA', hero: '#7C3AED' },
   },
+
+  // ---- basic, calm ----
+  { id: 'clean', name: 'Clean', emoji: '🤍', mascot: '💊', dark: false, colors: pal(false, '#F7F8FA', '#FFFFFF', '#1F2430', '#6B7280', '#3B82F6', '#2563EB', '#10B981', '#E3EAF6', '#E1E6EE') },
+  { id: 'graymist', name: 'Gray Mist', emoji: '🌫️', mascot: '🕊️', dark: false, colors: pal(false, '#E8EBEF', '#F6F7F9', '#2A2F38', '#6A7380', '#5B6B85', '#44536B', '#E08A3C', '#D2D8E1', '#CDD3DC') },
+  { id: 'calmsea', name: 'Calm Sea', emoji: '🐚', mascot: '🐚', dark: false, colors: pal(false, '#DDEFF3', '#F3FBFC', '#0F3340', '#587A86', '#2A9DB0', '#1E7F90', '#F28F6B', '#BFE3EA', '#BADBE2') },
+  { id: 'sand', name: 'Sand', emoji: '🏜️', mascot: '🌵', dark: false, colors: pal(false, '#F6EAD4', '#FFF9EC', '#4A361A', '#8C7650', '#C98A2B', '#A66C14', '#5E8C61', '#EFD9AE', '#E8D3A8') },
+  { id: 'slate', name: 'Slate', emoji: '🪨', mascot: '🗿', dark: true, colors: pal(true, '#1E232B', '#2A313C', '#E8ECF2', '#9AA4B2', '#6C8EF5', '#4C6FDB', '#F5B761', '#333B49', '#3B4454') },
+  { id: 'linen', name: 'Linen', emoji: '🧺', mascot: '🧶', dark: false, colors: pal(false, '#F3EEE6', '#FFFCF7', '#3B342B', '#8A8074', '#B5784A', '#955C33', '#6F8F72', '#E9DFD0', '#E2D8C8') },
+
+  // ---- storybook-inspired (original palettes) ----
+  { id: 'cloudmeadow', name: 'Cloud Meadow', emoji: '☁️', mascot: '🌾', dark: false, unlock: 4, particle: 'clouds', font: 'kalam', colors: pal(false, '#CFEFFF', '#F3FBFF', '#1D4A3A', '#587F70', '#4FA866', '#368850', '#F2A65A', '#B9E3A8', '#B0D9F0', '#5BB0E0') },
+  { id: 'spiritforest', name: 'Spirit Forest', emoji: '🌲', mascot: '🍃', dark: true, unlock: 12, particle: 'fireflies', font: 'cormorant', colors: pal(true, '#183B2C', '#21503B', '#D7FFC9', '#9CCB94', '#5BCB7B', '#38A85B', '#E4FF6B', '#2F6B4A', '#2B6148', '#2E7D4F') },
+  { id: 'lanternnight', name: 'Lantern Night', emoji: '🏮', mascot: '🏮', dark: false, unlock: 18, particle: 'lanterns', font: 'cormorant', colors: pal(false, '#FFE3B8', '#FFF6E6', '#7A2A12', '#A8714F', '#D8502B', '#B03A1A', '#F2B134', '#F4B48A', '#F0CFA0', '#E0663A') },
+  { id: 'seasidebreeze', name: 'Seaside Breeze', emoji: '🌊', mascot: '⛵', dark: false, unlock: 35, particle: 'greenleaf', font: 'kalam', colors: pal(false, '#BDE8E6', '#EFFBFA', '#10466A', '#4F84A0', '#1F9BB8', '#13799A', '#F29F5C', '#9FD6D2', '#A5D9D6', '#2BB3C8') },
+  { id: 'dandelionhill', name: 'Dandelion Hill', emoji: '🌾', mascot: '🌼', dark: false, unlock: 50, particle: 'seeds', font: 'kalam', colors: pal(false, '#F2E6C9', '#FFFAEE', '#4A3A1A', '#8F7C52', '#8DAA3C', '#6F8A26', '#F2B134', '#E4D09B', '#E8D8AE', '#A5C050') },
+
+  // ---- hippie ----
+  { id: 'woodstock', name: 'Woodstock Sunrise', emoji: '☮️', mascot: '☮️', dark: false, unlock: 2, particle: 'peace', font: 'shrikhand', colors: pal(false, '#FFB347', '#FFE9C7', '#5A1030', '#8F4A55', '#E64A8D', '#C42C70', '#7A3FD1', '#FF8FB1', '#F59A3C', '#F0661F') },
+  { id: 'daisychain', name: 'Daisy Chain', emoji: '🌼', mascot: '🌼', dark: false, unlock: 5, particle: 'flowers', font: 'lobster', colors: pal(false, '#E7F7B5', '#FBFFE8', '#6A1B9A', '#9C6AB8', '#C23FB0', '#9F2790', '#F5A623', '#F6A6E0', '#D4EC8E', '#D94FC4') },
+  { id: 'psychswirl', name: 'Psychedelic Swirl', emoji: '🌀', mascot: '🌀', dark: true, unlock: 8, particle: 'spirals', font: 'wetpaint', colors: pal(true, '#3A0F8F', '#5319C2', '#FFF35C', '#E0C4FF', '#FF3FA8', '#D61F86', '#27F5E3', '#6E2BD9', '#7B3BE0', '#8A2BE2') },
+  { id: 'incense', name: 'Incense and Macrame', emoji: '🪔', mascot: '🪬', dark: false, unlock: 15, particle: 'smoke', font: 'gloria', colors: pal(false, '#D9B98C', '#F2E2C6', '#4A2A10', '#80603A', '#A8683A', '#8A4E24', '#6F8F4E', '#C49A6C', '#C9A878', '#B97A4A') },
+  { id: 'sunflowerpeace', name: 'Sunflower Peace', emoji: '🌻', mascot: '🌈', dark: false, unlock: 40, particle: 'rainbows', font: 'shrikhand', colors: pal(false, '#FFE14F', '#FFF6BF', '#2D1A6B', '#6B5BA0', '#3FA9E0', '#1E86BF', '#E64A8D', '#7ED8FF', '#F0CC3A', '#F28C1F') },
+  { id: 'chillgreen', name: 'Green Haze', emoji: '🌿', mascot: '🌿', dark: true, unlock: 20, particle: 'stonermix', font: 'merienda', colors: pal(true, '#0F2A18', '#173D24', '#E5FFD1', '#98C98A', '#4CC25A', '#2FA03E', '#F2D94A', '#20502C', '#245C33', '#2E8B3E') },
+
+  // ---- animated extras ----
+  { id: 'snowfall', name: 'Snowfall', emoji: '☃️', mascot: '☃️', dark: false, unlock: 5, particle: 'snow', font: 'fredoka', colors: pal(false, '#E8F2FF', '#F8FBFF', '#183A63', '#5F7FA3', '#4A8FE0', '#2F6FC0', '#E26D8B', '#C3DBF7', '#C9DDF5', '#5E9DE8') },
+  { id: 'autumn', name: 'Autumn Leaves', emoji: '🍁', mascot: '🍁', dark: false, unlock: 10, particle: 'leaves', font: 'caveat', colors: pal(false, '#FFEBD2', '#FFF8EE', '#6B2D0A', '#A66B45', '#D9692A', '#B54E14', '#8A9A3B', '#F8CDA0', '#F2D5AE', '#E27B35') },
+  { id: 'fireflies', name: 'Fireflies', emoji: '🪲', mascot: '✨', dark: true, unlock: 21, particle: 'fireflies', font: 'merienda', colors: pal(true, '#0F1A12', '#18281C', '#E9FFB8', '#A5C47E', '#7BC74A', '#5AA52E', '#E4FF6B', '#26402B', '#2C4A32', '#3F8F3A') },
+  { id: 'rainyday', name: 'Rainy Day', emoji: '🌧️', mascot: '☔', dark: false, unlock: 25, particle: 'rain', font: 'patrick', colors: pal(false, '#DDE6EE', '#F3F7FB', '#26394D', '#6A8099', '#4F86B8', '#376A9A', '#E69A4C', '#BCCFE2', '#C4D2E0', '#5C93C4') },
+  { id: 'neonarcade', name: 'Neon Arcade', emoji: '🕹️', mascot: '👾', dark: true, unlock: 45, particle: 'confetti', font: 'pixel', speed: 1.3, colors: pal(true, '#10002B', '#240046', '#7DF9FF', '#B28DFF', '#FF4FD8', '#D91FB4', '#FFE14F', '#3A0F7A', '#4A1B96', '#7B2FF7') },
 ];
+
+export interface CustomTheme {
+  bg: string;
+  primary: string;
+  text: string;
+  font: string | null;
+  particle: string | null;
+  speed: number;
+}
+
+export const DEFAULT_CUSTOM: CustomTheme = { bg: '#FFD6EC', primary: '#E64A8D', text: '#4A1530', font: 'baloo', particle: 'hearts', speed: 1 };
+
+function hexToRgb(h: string): [number, number, number] {
+  const n = parseInt(h.replace('#', ''), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+function mix(a: string, b: string, w: number): string {
+  const x = hexToRgb(a);
+  const y = hexToRgb(b);
+  const c = x.map((v, i) => Math.round(v * (1 - w) + y[i] * w));
+  return '#' + c.map((v) => v.toString(16).padStart(2, '0')).join('');
+}
+function luma(h: string): number {
+  const [r, g, b] = hexToRgb(h);
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+}
+
+/** Builds a full theme from a few picked colors. Buttons are tinted, never pure white. */
+export function customThemeDef(c: CustomTheme): ThemeDef {
+  const dark = luma(c.bg) < 0.45;
+  const card = dark ? mix(c.bg, '#ffffff', 0.12) : mix(c.bg, '#ffffff', 0.7);
+  const chip = mix(c.bg, c.primary, dark ? 0.35 : 0.3);
+  return {
+    id: 'custom', name: 'My theme', emoji: '🎨', mascot: '🎨', dark,
+    particle: c.particle ?? undefined, speed: c.speed, font: c.font ?? undefined,
+    colors: pal(dark, c.bg, card, c.text, mix(c.text, c.bg, 0.45), c.primary, mix(c.primary, '#000000', 0.2), mix(c.primary, c.text, 0.5), chip, mix(c.bg, c.text, 0.15), c.primary),
+  };
+}
 
 export interface Accent { id: string; name: string; color: string; dark: string }
 /** null id = "use the theme's own color". */
@@ -165,15 +244,16 @@ export const radius = { ...CORNER_SETS.soft };
 let version = 0;
 let currentKey = '';
 
-export function getTheme(id: string): ThemeDef {
+export function getTheme(id: string, custom?: CustomTheme): ThemeDef {
+  if (id === 'custom') return customThemeDef(custom ?? DEFAULT_CUSTOM);
   return THEMES.find((t) => t.id === id) ?? THEMES[0];
 }
 
-export interface Look { theme: string; accent: string | null; corners: string }
+export interface Look { theme: string; accent: string | null; corners: string; custom?: CustomTheme }
 
 export function applyLook(look: Look): ThemeDef {
-  const t = getTheme(look.theme);
-  const key = `${t.id}|${look.accent ?? ''}|${look.corners}`;
+  const t = getTheme(look.theme, look.custom);
+  const key = `${t.id}|${look.accent ?? ''}|${look.corners}|${look.theme === 'custom' ? JSON.stringify(look.custom) : ''}`;
   if (key !== currentKey) {
     Object.assign(colors, t.colors);
     const ac = ACCENTS.find((x) => x.id === look.accent);

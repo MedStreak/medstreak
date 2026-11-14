@@ -3,7 +3,7 @@ import { Platform } from 'react-native';
 import { formatTime } from './dates';
 import type { Medication, Settings } from './types';
 
-const CHANNEL_ID = 'reminders';
+const CHANNEL_ID = 'reminders-v2';
 export const CATEGORY_DOSE = 'dose-reminder';
 export const ACTION_TAKEN = 'TAKEN';
 export const ACTION_SNOOZE = 'SNOOZE';
@@ -23,10 +23,15 @@ export async function setupNotifications(): Promise<void> {
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync(CHANNEL_ID, {
       name: 'Medication reminders',
-      importance: Notifications.AndroidImportance.HIGH,
+      importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 250, 250, 250],
       lightColor: '#FF7A45',
+      sound: 'default',
+      enableVibrate: true,
+      lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+      bypassDnd: false,
     });
+    await Notifications.deleteNotificationChannelAsync('reminders').catch(() => {});
   }
   await Notifications.setNotificationCategoryAsync(CATEGORY_DOSE, [
     { identifier: ACTION_TAKEN, buttonTitle: 'Taken ✓', options: { opensAppToForeground: true } },
@@ -52,7 +57,19 @@ const REMINDER_COPY = [
  * Cancels everything and re-schedules: one repeating daily reminder per dose time,
  * plus one daily check-in. Called whenever medications or settings change.
  */
+export let lastScheduleError: string | null = null;
+
 export async function rescheduleAll(meds: Medication[], settings: Settings): Promise<void> {
+  try {
+    await rescheduleInner(meds, settings);
+    lastScheduleError = null;
+  } catch (e) {
+    lastScheduleError = e instanceof Error ? e.message : String(e);
+    throw e;
+  }
+}
+
+async function rescheduleInner(meds: Medication[], settings: Settings): Promise<void> {
   await Notifications.cancelAllScheduledNotificationsAsync();
   if (!settings.remindersOn) return;
 
@@ -95,6 +112,40 @@ export async function rescheduleAll(meds: Medication[], settings: Settings): Pro
       },
     });
   }
+}
+
+export interface ReminderHealth {
+  allowed: boolean;
+  queued: number;
+  nextAt: Date | null;
+  error: string | null;
+}
+
+/** What the "Reminder check" card shows: permission state and what is actually queued. */
+export async function reminderHealth(meds: Medication[]): Promise<ReminderHealth> {
+  const perm = await Notifications.getPermissionsAsync();
+  const list = await Notifications.getAllScheduledNotificationsAsync();
+  const now = new Date();
+  let next: Date | null = null;
+  for (const m of meds) {
+    if (!m.active) continue;
+    for (const t of m.times) {
+      const [h, mi] = t.split(':').map(Number);
+      const d = new Date(now);
+      d.setHours(h, mi, 0, 0);
+      if (d <= now) d.setDate(d.getDate() + 1);
+      if (!next || d < next) next = d;
+    }
+  }
+  return { allowed: perm.granted, queued: list.length, nextAt: next, error: lastScheduleError };
+}
+
+/** Fires a test reminder in 10 seconds so the person can confirm notifications really arrive. */
+export async function sendTestReminder(): Promise<void> {
+  await Notifications.scheduleNotificationAsync({
+    content: { title: 'MedStreak test', body: 'It works! Your reminders will arrive like this. 🎉', sound: true },
+    trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: 10, channelId: CHANNEL_ID },
+  });
 }
 
 export async function snoozeDose(medName: string, medId: string, time: string): Promise<void> {

@@ -55,6 +55,10 @@ export interface Settings {
   bubbleColor: string | null;
   /** Days (YYYY-MM-DD) I froze on purpose; each spends one streak freeze unless the day was completed. */
   frozenDays: string[];
+  /** My own theme (used when theme === 'custom'). */
+  customTheme: import('./theme').CustomTheme;
+  /** Particle override for any theme: a particle id, 'none', or null to use the theme's own. */
+  particle: string | null;
   /** Unlockable themes I have earned. */
   unlockedThemes: string[];
 }
