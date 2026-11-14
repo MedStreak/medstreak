@@ -1,12 +1,17 @@
 # MedStreak
 
+**📱 New to this? See [INSTALL-ANDROID.md](INSTALL-ANDROID.md) for 2-minute step-by-step install instructions.**
+
 Medication reminders + streaks + a signed-in public chat. Expo / React Native (iOS + Android). **Runs entirely on Firebase's free Spark plan** — no billing, no Cloud Functions, no deploy command.
 
 ## Features
 - Daily reminders with Taken / Snooze actions, daily "Did you take your meds today?" popup with confetti
 - Streaks (with a streak shield every 7 days, max 2), milestones/badges, adherence calendar
 - Refill reminders, goals (streak, adherence %, custom)
-- Live public chat (sign-in required) with Report → warning → ban
+- Streak freezes (earn one every 7 days, max 2; use "Freeze today" for sick days or travel)
+- 24 themes, plus 5 unlockable animated themes (petals, aurora, falling stars, lava lamp, rainbow wave) earned with streak milestones
+- Update notifier (checks GitHub Releases, one-tap download) and on-device crash reports you choose to share
+- Live public chat (sign-in required) with Report → warning → ban, custom bubble colors
 - Six color themes
 
 ## Run it
