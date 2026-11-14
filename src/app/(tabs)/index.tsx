@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { UpdateBanner } from '../../components/UpdateBanner';
 import { Button, Card, ProgressBar, SectionTitle } from '../../components/ui';
 import { formatTime } from '../../lib/dates';
 import { colors, getTheme, themedStyles } from '../../lib/theme';
@@ -8,12 +9,13 @@ import { dosesForDay, motivationalMessage, nextMilestone } from '../../lib/strea
 import { useApp } from '../../state/AppState';
 
 export default function TodayScreen() {
-  const { data, today, streak, toggleDose, answerPrompt } = useApp();
+  const { data, today, streak, toggleDose, answerPrompt, updateSettings } = useApp();
   const router = useRouter();
   const slots = dosesForDay(data.meds, today);
   const done = new Set(data.logs[today] ?? []);
   const takenCount = slots.filter((s) => done.has(s.key)).length;
   const next = nextMilestone(streak.current);
+  const frozen = data.settings.frozenDays.includes(today);
 
   const lowSupply = data.meds.filter((m) => {
     if (!m.active || m.pillsRemaining === null) return false;
@@ -24,6 +26,7 @@ export default function TodayScreen() {
   if (data.meds.filter((m) => m.active).length === 0) {
     return (
       <View style={styles.empty}>
+        <UpdateBanner />
         <Text style={styles.bigEmoji}>💊</Text>
         <Text style={styles.emptyTitle}>Let’s build your streak</Text>
         <Text style={styles.emptyText}>Add your first medication and we’ll remind you every day and cheer you on.</Text>
@@ -34,13 +37,14 @@ export default function TodayScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <UpdateBanner />
       <Card style={styles.streakCard}>
         <Text style={styles.flame}>{getTheme(data.settings.theme).mascot}</Text>
         <Text style={styles.streakNum}>{streak.current}</Text>
         <Text style={styles.streakLabel}>day streak</Text>
         <View style={styles.statsRow}>
           <Text style={styles.stat}>🏅 Best: {streak.best}</Text>
-          <Text style={styles.stat}>🛡️ Shields: {streak.shields}</Text>
+          <Text style={styles.stat}>❄️ Freezes: {streak.shields}</Text>
         </View>
         {next !== null && (
           <View style={{ alignSelf: 'stretch', marginTop: 12 }}>
@@ -86,6 +90,26 @@ export default function TodayScreen() {
           onPress={() => answerPrompt('yes')}
           style={{ backgroundColor: colors.success, marginTop: 6 }}
         />
+      )}
+      {takenCount < slots.length && streak.shields > 0 && !frozen && (
+        <Button
+          title={`❄️ Freeze today (${streak.shields} left)`}
+          kind="secondary"
+          style={{ marginTop: 8 }}
+          onPress={() =>
+            Alert.alert(
+              'Freeze today?',
+              'This uses 1 freeze. Your streak stays safe even if you skip today (sick day, travel). If you do take everything, no freeze is spent.',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Freeze it', onPress: () => updateSettings({ frozenDays: [...data.settings.frozenDays, today] }) },
+              ],
+            )
+          }
+        />
+      )}
+      {frozen && takenCount < slots.length && (
+        <Text style={styles.allDone}>❄️ Today is frozen. Your streak is safe.</Text>
       )}
       {takenCount === slots.length && slots.length > 0 && (
         <Text style={styles.allDone}>All done for today. See you tomorrow! 🌙</Text>

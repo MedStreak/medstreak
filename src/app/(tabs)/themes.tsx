@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Card, SectionTitle } from '../../components/ui';
 import { ACCENTS, THEMES, colors, themedStyles } from '../../lib/theme';
 import { useApp } from '../../state/AppState';
@@ -12,8 +12,8 @@ const CORNERS = [
 ];
 
 export default function ThemesScreen() {
-  const { data, updateSettings } = useApp();
-  const { theme: current, accent, corners } = data.settings;
+  const { data, updateSettings, streak } = useApp();
+  const { theme: current, accent, corners, unlockedThemes } = data.settings;
   const tap = () => Haptics.selectionAsync().catch(() => {});
 
   return (
@@ -23,6 +23,7 @@ export default function ThemesScreen() {
       <SectionTitle>Theme</SectionTitle>
       {THEMES.map((t) => {
         const selected = t.id === current;
+        const locked = t.unlock !== undefined && !unlockedThemes.includes(t.id);
         return (
           <Pressable
             key={t.id}
@@ -30,10 +31,14 @@ export default function ThemesScreen() {
             accessibilityLabel={`${t.name} theme${selected ? ', selected' : ''}`}
             onPress={() => {
               tap();
+              if (locked) {
+                Alert.alert('Locked 🔒', `Reach a ${t.unlock}-day streak to unlock ${t.name}. Your best so far is ${streak.best} days. You can do it!`);
+                return;
+              }
               updateSettings({ theme: t.id });
             }}
           >
-            <Card style={[styles.card, selected && styles.cardSelected]}>
+            <Card style={[styles.card, selected && styles.cardSelected, locked && { opacity: 0.55 }]}>
               <View style={[styles.preview, { backgroundColor: t.colors.bg, borderColor: t.colors.border }]}>
                 <View style={[styles.previewHero, { backgroundColor: t.colors.hero }]}>
                   <Text style={{ fontSize: 14 }}>{t.mascot}</Text>
@@ -47,7 +52,9 @@ export default function ThemesScreen() {
                 <Text style={styles.name}>
                   {t.emoji} {t.name}
                 </Text>
-                <Text style={styles.sub}>{t.dark ? 'Dark mode' : 'Light'}</Text>
+                <Text style={styles.sub}>
+                  {locked ? `🔒 Unlocks at a ${t.unlock}-day streak` : `${t.dark ? 'Dark mode' : 'Light'}${t.fx ? ' · ✨ Animated' : ''}`}
+                </Text>
               </View>
               {selected && <Text style={styles.check}>✓</Text>}
             </Card>
