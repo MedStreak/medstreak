@@ -11,6 +11,7 @@ import React, {
 } from 'react';
 import { AppState as RNAppState, Platform } from 'react-native';
 import { dateKey } from '../lib/dates';
+import { THEMES } from '../lib/theme';
 import { ensurePermission, notifyRefill, rescheduleAll, setupNotifications } from '../lib/notifications';
 import {
   MILESTONES,
@@ -46,6 +47,8 @@ export const defaultSettings: Settings = {
   accent: null,
   corners: 'soft',
   bubbleColor: null,
+  frozenDays: [],
+  unlockedThemes: [],
 };
 
 const emptyState: Persisted = { meds: [], logs: {}, goals: [], settings: defaultSettings };
@@ -162,7 +165,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loaded, meds, settings.remindersOn, settings.checkInHour, settings.checkInMinute]);
 
-  const streak = useMemo(() => computeStreak(data.meds, data.logs, today), [data.meds, data.logs, today]);
+  const streak = useMemo(() => computeStreak(data.meds, data.logs, today, data.settings.frozenDays),
+    [data.meds, data.logs, today, data.settings.frozenDays],
+  );
   const adherence30 = useMemo(() => adherence(data.meds, data.logs, today, 30), [data.meds, data.logs, today]);
 
   const pendingToday = useCallback(() => {
@@ -204,12 +209,33 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, [loaded, streak, adherence30, data.goals, commit, pushCelebration]);
 
+  // ---- unlock animated themes as the best streak grows ----
+  useEffect(() => {
+    if (!loaded) return;
+    const cur = ref.current;
+    const fresh = THEMES.filter(
+      (t) => t.unlock !== undefined && streak.best >= t.unlock && !cur.settings.unlockedThemes.includes(t.id),
+    );
+    if (fresh.length === 0) return;
+    commit({
+      ...cur,
+      settings: { ...cur.settings, unlockedThemes: [...cur.settings.unlockedThemes, ...fresh.map((t) => t.id)] },
+    });
+    for (const t of fresh) {
+      pushCelebration({
+        kind: 'goal',
+        title: 'Theme unlocked! 🎨',
+        subtitle: `${t.emoji} ${t.name} is ready on the Themes tab.`,
+      });
+    }
+  }, [loaded, streak.best, commit, pushCelebration]);
+
   // ---- actions ----
   const takeDoses = useCallback(
     (day: string, keys: DoseKey[], taken: boolean) => {
       const prev = ref.current;
       const todayKey = dateKey();
-      const before = computeStreak(prev.meds, prev.logs, todayKey);
+      const before = computeStreak(prev.meds, prev.logs, todayKey, prev.settings.frozenDays);
       const set = new Set(prev.logs[day] ?? []);
       let meds = prev.meds;
       const refillAlerts: { name: string; days: number }[] = [];
@@ -237,7 +263,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const next = { ...prev, meds, logs };
       commit(next);
 
-      const after = computeStreak(meds, logs, todayKey);
+      const after = computeStreak(meds, logs, todayKey, prev.settings.frozenDays);
       refillAlerts.forEach((r) => notifyRefill(r.name, r.days).catch(() => {}));
 
       if (taken && day === todayKey && !before.completedToday && after.completedToday) {
