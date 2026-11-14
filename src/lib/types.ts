@@ -53,6 +53,10 @@ export interface Settings {
   corners: string;
   /** My chat bubble color (hex), or null to match my theme. */
   bubbleColor: string | null;
+  /** Days (YYYY-MM-DD) I froze on purpose; each spends one streak freeze unless the day was completed. */
+  frozenDays: string[];
+  /** Unlockable themes I have earned. */
+  unlockedThemes: string[];
 }
 
 export interface Persisted {

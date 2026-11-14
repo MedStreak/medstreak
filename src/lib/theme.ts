@@ -24,6 +24,10 @@ export interface ThemeDef {
   dark: boolean;
   /** Emoji shown on the streak card. */
   mascot: string;
+  /** Best streak (days) needed to unlock this theme. Unset = free. */
+  unlock?: number;
+  /** Animated effect drawn over the app. */
+  fx?: 'petals' | 'stars' | 'bubbles' | 'aurora' | 'rainbow';
   colors: Palette;
 }
 
@@ -106,6 +110,26 @@ export const THEMES: ThemeDef[] = [
   {
     id: 'trippy', name: 'Trippy', emoji: '🍄', mascot: '🍄', dark: true,
     colors: { ...darkBase, bg: '#1A0838', card: '#2D1259', text: '#FFF0FF', muted: '#C79BFF', primary: '#FF2EC4', primaryDark: '#D60FA2', accent: '#27F5E3', border: '#4B2090', chipBg: '#3A1773', hero: '#7B1FA2' },
+  },
+  {
+    id: 'sakura', name: 'Sakura Drift', emoji: '🌸', mascot: '🌸', dark: false, unlock: 3, fx: 'petals',
+    colors: { ...base, bg: '#FFE3EE', card: '#FFF8FB', text: '#4A1530', muted: '#A76A87', primary: '#F0589A', primaryDark: '#D23880', accent: '#7BC6A4', border: '#F8BDD6', chipBg: '#FFD0E3', hero: '#F4709F' },
+  },
+  {
+    id: 'aurora', name: 'Aurora', emoji: '🌌', mascot: '🦉', dark: true, unlock: 7, fx: 'aurora',
+    colors: { ...darkBase, bg: '#07162B', card: '#0F2440', text: '#E6FFF7', muted: '#86B7C9', primary: '#14B88A', primaryDark: '#0E8F6B', accent: '#8C7CFF', border: '#1B3A5E', chipBg: '#14304F', hero: '#0F9D8A' },
+  },
+  {
+    id: 'starfall', name: 'Starfall', emoji: '🌠', mascot: '⭐', dark: true, unlock: 14, fx: 'stars',
+    colors: { ...darkBase, bg: '#0A0820', card: '#171340', text: '#F2F0FF', muted: '#A9A4E0', primary: '#7C5CFF', primaryDark: '#5B3DE0', accent: '#FFD24D', border: '#2A2468', chipBg: '#201A58', hero: '#4B2FB8' },
+  },
+  {
+    id: 'lavalamp', name: 'Lava Lamp', emoji: '🫠', mascot: '🔮', dark: true, unlock: 30, fx: 'bubbles',
+    colors: { ...darkBase, bg: '#2A0A3D', card: '#431563', text: '#FFF1E6', muted: '#E0A8D0', primary: '#FF6B35', primaryDark: '#E04F1B', accent: '#FFD23F', border: '#6A2A8F', chipBg: '#521A78', hero: '#C2185B' },
+  },
+  {
+    id: 'rainbowwave', name: 'Rainbow Wave', emoji: '🏳️‍🌈', mascot: '🌈', dark: false, unlock: 60, fx: 'rainbow',
+    colors: { ...base, bg: '#FFF3FF', card: '#FFFFFF', text: '#2B1B4D', muted: '#7A5FA8', primary: '#FF2D95', primaryDark: '#D40F77', accent: '#00BFFF', border: '#F2C6F2', chipBg: '#FFE0FA', hero: '#7C3AED' },
   },
 ];
 

@@ -68,6 +68,7 @@ export function computeStreak(
   meds: Medication[],
   logs: Record<string, DoseKey[]>,
   today: string,
+  frozen: string[] = [],
 ): StreakInfo {
   const active = meds.filter((m) => m.active);
   if (active.length === 0) {
@@ -86,6 +87,13 @@ export function computeStreak(
     const day = addDays(first, i);
     const s = summarizeDay(active, logs, day, today);
     if (s.status === 'none' || s.status === 'future') continue;
+
+    // A day frozen on purpose: spends one freeze, keeps the streak, adds nothing.
+    // If the day ends up completed anyway, the freeze isn't spent.
+    if (s.status !== 'complete' && frozen.includes(day) && shields > 0) {
+      shields -= 1;
+      continue;
+    }
 
     if (s.status === 'complete') {
       if (current === 0) startDay = day;
