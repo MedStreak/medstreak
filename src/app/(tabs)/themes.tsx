@@ -1,9 +1,19 @@
 import * as Haptics from 'expo-haptics';
 import React from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { PARTICLES, PARTICLE_IDS } from '../../components/ThemeFx';
 import { Card, SectionTitle } from '../../components/ui';
-import { ACCENTS, THEMES, colors, themedStyles } from '../../lib/theme';
+import { FONT_LABELS, type FontKey } from '../../lib/fonts';
+import { ACCENTS, DEFAULT_CUSTOM, THEMES, colors, themedStyles } from '../../lib/theme';
 import { useApp } from '../../state/AppState';
+
+const BG_SWATCHES = ['#FFFFFF', '#FFE3EE', '#FFD6EC', '#FFEBD2', '#FFF3B0', '#E7F7B5', '#C9F7DE', '#CFEFFF', '#DDD0FF', '#F2E6C9', '#1E232B', '#10002B', '#0F2A18', '#183B2C'];
+const TEXT_SWATCHES = ['#1F2430', '#4A1530', '#2B1B4D', '#0F3340', '#12382A', '#4A3A1A', '#FFFFFF', '#FFF35C', '#E5FFD1', '#7DF9FF'];
+const SPEEDS = [
+  { label: 'Slow', v: 0.6 },
+  { label: 'Normal', v: 1 },
+  { label: 'Fast', v: 1.8 },
+];
 
 const CORNERS = [
   { id: 'sharp', label: 'Sharp', r: 4 },
@@ -13,7 +23,12 @@ const CORNERS = [
 
 export default function ThemesScreen() {
   const { data, updateSettings, streak } = useApp();
-  const { theme: current, accent, corners, unlockedThemes } = data.settings;
+  const { theme: current, accent, corners, unlockedThemes, particle, customTheme } = data.settings;
+  const ct = customTheme ?? DEFAULT_CUSTOM;
+  const setCustom = (patch: Partial<typeof ct>) => {
+    tap();
+    updateSettings({ theme: 'custom', customTheme: { ...ct, ...patch } });
+  };
   const tap = () => Haptics.selectionAsync().catch(() => {});
 
   return (
@@ -53,7 +68,7 @@ export default function ThemesScreen() {
                   {t.emoji} {t.name}
                 </Text>
                 <Text style={styles.sub}>
-                  {locked ? `🔒 Unlocks at a ${t.unlock}-day streak` : `${t.dark ? 'Dark mode' : 'Light'}${t.fx ? ' · ✨ Animated' : ''}`}
+                  {locked ? `🔒 Unlocks at a ${t.unlock}-day streak` : `${t.dark ? 'Dark mode' : 'Light'}${t.fx || t.particle ? ' · ✨ Animated' : ''}`}
                 </Text>
               </View>
               {selected && <Text style={styles.check}>✓</Text>}
@@ -61,6 +76,63 @@ export default function ThemesScreen() {
           </Pressable>
         );
       })}
+
+      <SectionTitle>Particles</SectionTitle>
+      <Text style={styles.sub}>Falling, rising or drifting things on top of any theme.</Text>
+      <View style={styles.chipRow}>
+        {[{ id: null as string | null, label: 'Theme default', icon: '🎨' }, { id: 'none', label: 'None', icon: '🚫' }, ...PARTICLE_IDS.map((id) => ({ id: id as string | null, label: PARTICLES[id].label, icon: PARTICLES[id].icon }))].map((o) => (
+          <Pressable
+            key={o.label}
+            accessibilityRole="button"
+            onPress={() => {
+              tap();
+              updateSettings({ particle: o.id });
+            }}
+            style={[styles.chip, particle === o.id && styles.chipOn]}
+          >
+            <Text style={[styles.chipText, particle === o.id && { color: '#fff' }]}>
+              {o.icon} {o.label}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
+      <SectionTitle>Make your own theme 🎨</SectionTitle>
+      <Text style={styles.sub}>Pick anything below and it becomes your theme automatically.</Text>
+      <Text style={styles.label}>Background</Text>
+      <View style={styles.swatchRow}>
+        {BG_SWATCHES.map((c) => (
+          <Pressable key={c} accessibilityLabel={`Background ${c}`} onPress={() => setCustom({ bg: c })} style={[styles.swatch, styles.swatchBorder, { backgroundColor: c }, current === 'custom' && ct.bg === c && styles.swatchOn]} />
+        ))}
+      </View>
+      <Text style={styles.label}>Buttons and highlights</Text>
+      <View style={styles.swatchRow}>
+        {ACCENTS.map((a) => (
+          <Pressable key={a.id} accessibilityLabel={`Button color ${a.name}`} onPress={() => setCustom({ primary: a.color })} style={[styles.swatch, { backgroundColor: a.color }, current === 'custom' && ct.primary === a.color && styles.swatchOn]} />
+        ))}
+      </View>
+      <Text style={styles.label}>Text</Text>
+      <View style={styles.swatchRow}>
+        {TEXT_SWATCHES.map((c) => (
+          <Pressable key={c} accessibilityLabel={`Text ${c}`} onPress={() => setCustom({ text: c })} style={[styles.swatch, styles.swatchBorder, { backgroundColor: c }, current === 'custom' && ct.text === c && styles.swatchOn]} />
+        ))}
+      </View>
+      <Text style={styles.label}>Font</Text>
+      <View style={styles.chipRow}>
+        {(Object.keys(FONT_LABELS) as FontKey[]).map((f) => (
+          <Pressable key={f} onPress={() => setCustom({ font: f })} style={[styles.chip, current === 'custom' && ct.font === f && styles.chipOn]}>
+            <Text style={[styles.chipText, current === 'custom' && ct.font === f && { color: '#fff' }]}>{FONT_LABELS[f]}</Text>
+          </Pressable>
+        ))}
+      </View>
+      <Text style={styles.label}>Particle speed</Text>
+      <View style={styles.chipRow}>
+        {SPEEDS.map((o) => (
+          <Pressable key={o.label} onPress={() => setCustom({ speed: o.v })} style={[styles.chip, current === 'custom' && ct.speed === o.v && styles.chipOn]}>
+            <Text style={[styles.chipText, current === 'custom' && ct.speed === o.v && { color: '#fff' }]}>{o.label}</Text>
+          </Pressable>
+        ))}
+      </View>
 
       <SectionTitle>Accent color</SectionTitle>
       <Text style={styles.sub}>Tints buttons, tabs and your streak card on top of any theme.</Text>
@@ -128,6 +200,12 @@ const styles = themedStyles(() =>
     swatchOn: { borderColor: colors.text },
     autoChip: { height: 40, paddingHorizontal: 14, borderRadius: 20, backgroundColor: colors.chipBg, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: 'transparent' },
     autoText: { fontWeight: '800', color: colors.text },
+    label: { fontWeight: '800', color: colors.text, marginTop: 14 },
+    swatchBorder: { borderColor: colors.border },
+    chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 },
+    chip: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 16, backgroundColor: colors.chipBg },
+    chipOn: { backgroundColor: colors.primary },
+    chipText: { fontWeight: '700', color: colors.text },
     cornerRow: { flexDirection: 'row', gap: 10 },
     cornerBox: { flex: 1, paddingVertical: 16, alignItems: 'center', backgroundColor: colors.chipBg },
     cornerOn: { backgroundColor: colors.primary },

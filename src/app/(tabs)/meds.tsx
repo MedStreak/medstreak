@@ -2,6 +2,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { ReminderCheck } from '../../components/ReminderCheck';
 import { Button, Card, SectionTitle } from '../../components/ui';
 import { formatTime, fromHHmm, toHHmm } from '../../lib/dates';
 import { colors, themedStyles } from '../../lib/theme';
@@ -45,6 +46,8 @@ export default function MedsScreen() {
         )}
       </Card>
 
+      <ReminderCheck />
+
       <SectionTitle>My medications</SectionTitle>
       {meds.length === 0 && <Text style={styles.muted}>Nothing here yet.</Text>}
       {meds.map((m) => (
@@ -81,6 +84,7 @@ export default function MedsScreen() {
       <Text style={styles.disclaimer}>
         MedStreak is a reminder and habit tool. It doesn’t give medical advice. Always follow your doctor’s or pharmacist’s instructions.
       </Text>
+      <Button title="💌 About the creator" kind="secondary" style={{ marginTop: 20 }} onPress={() => router.push('/creator')} />
     </ScrollView>
   );
 }
