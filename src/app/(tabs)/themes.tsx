@@ -7,7 +7,7 @@ import { PARTICLES, PARTICLE_IDS } from '../../components/ThemeFx';
 import { Card, SectionTitle } from '../../components/ui';
 import { DimSlider } from '../../components/DimSlider';
 import { FONT_FILES, FONT_LABELS, type FontKey } from '../../lib/fonts';
-import { ACCENTS, DEFAULT_CUSTOM, THEMES, colors, getTheme, onPrimary, radius, themedStyles } from '../../lib/theme';
+import { ACCENTS, DEFAULT_CUSTOM, THEMES, colors, getTheme, onPrimary, radius, readableOn, themedStyles } from '../../lib/theme';
 import { useApp } from '../../state/AppState';
 
 const BG_SWATCHES = ['#FFFFFF', '#FFE3EE', '#FFD6EC', '#FFEBD2', '#FFF3B0', '#E7F7B5', '#C9F7DE', '#CFEFFF', '#DDD0FF', '#F2E6C9', '#1E232B', '#10002B', '#0F2A18', '#183B2C'];
@@ -362,11 +362,11 @@ const styles = themedStyles(() =>
     chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 },
     chip: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 16, backgroundColor: colors.chipBg },
     chipOn: { backgroundColor: colors.primary },
-    chipText: { fontWeight: '700', color: colors.text },
+    chipText: { fontWeight: '700', color: readableOn(colors.text, colors.chipBg) },
     cornerRow: { flexDirection: 'row', gap: 10 },
     cornerBox: { flex: 1, paddingVertical: 16, alignItems: 'center', backgroundColor: colors.chipBg },
     cornerOn: { backgroundColor: colors.primary },
-    cornerText: { fontWeight: '800', color: colors.text },
+    cornerText: { fontWeight: '800', color: readableOn(colors.text, colors.chipBg) },
     bgRow: { flexDirection: 'row', gap: 12, alignItems: 'center', marginTop: 10 },
     bgPreview: { width: 112, height: 120, borderRadius: 14, overflow: 'hidden', backgroundColor: colors.chipBg, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.border },
     bgEmpty: { color: colors.muted, fontWeight: '700' },
