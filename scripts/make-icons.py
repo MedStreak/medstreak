@@ -45,16 +45,6 @@ def character(size, k=1.0, face=True, mono=False):
         d.ellipse([px-pr,py-pr,px+pr,py+pr],outline=ink,width=int(2.6*u))
         d.line([px,py-pr,px,py+pr],fill=ink,width=int(2.6*u))
         d.line([px,py,px-7*u,py+7*u],fill=ink,width=int(2.6*u)); d.line([px,py,px+7*u,py+7*u],fill=ink,width=int(2.6*u))
-        # joint (tilted a little, tucked at the mouth) + smoke
-        j=Image.new('RGBA',(s,s),(0,0,0,0)); jd=ImageDraw.Draw(j)
-        jx,jy=cx+12*u,cy+13*u
-        jd.rounded_rectangle([jx,jy-3*u,jx+30*u,jy+3.5*u],radius=3*u,fill=(246,238,220,255))
-        jd.rounded_rectangle([jx+27*u,jy-3*u,jx+33.5*u,jy+3.5*u],radius=3*u,fill=(255,90,31,255))
-        j=j.rotate(-10,resample=Image.BICUBIC,center=(jx,jy)); cap.alpha_composite(j)
-        import math as m
-        for t in range(0,31):
-            f=t/30; x=cx+(46+6*m.sin(f*6.0))*u; y=cy+(10-24*f)*u; r=(1.6+1.6*f)*u
-            d.ellipse([x-r,y-r,x+r,y+r],fill=(255,255,255,int(240-120*f)))
     cap=cap.rotate(28,resample=Image.BICUBIC,center=(c,c))
     if not mono:
         a=cap.split()[3].filter(ImageFilter.GaussianBlur(s*0.01))
