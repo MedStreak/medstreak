@@ -27,7 +27,7 @@ export interface ThemeDef {
   /** Best streak (days) needed to unlock this theme. Unset = free. */
   unlock?: number;
   /** Animated effect drawn over the app. */
-  fx?: 'aurora' | 'rainbow';
+  fx?: 'aurora' | 'rainbow' | 'lightning';
   /** Falling / rising / drifting particle id (see ThemeFx PARTICLES). */
   particle?: string;
   /** Particle speed multiplier (1 = normal). */
@@ -142,6 +142,14 @@ export const THEMES: ThemeDef[] = [
     id: 'rainbowwave', name: 'Rainbow Wave', emoji: '🏳️‍🌈', mascot: '🌈', dark: false, unlock: 60, fx: 'rainbow', particle: 'confetti', font: 'baloo',
     colors: { ...base, bg: '#FFF3FF', card: '#FFFFFF', text: '#2B1B4D', muted: '#7A5FA8', primary: '#FF2D95', primaryDark: '#D40F77', accent: '#00BFFF', border: '#F2C6F2', chipBg: '#FFE0FA', hero: '#7C3AED' },
   },
+
+  // ---- animated, free, not girly ----
+  { id: 'garagenight', name: 'Garage Night', emoji: '🔧', mascot: '🔧', dark: true, particle: 'sparks', colors: pal(true, '#2B2D31', '#3A3D43', '#E6E8EB', '#9AA0A8', '#FF7A1A', '#E06000', '#FFC15A', '#464A52', '#4A4E56', '#C25A10') },
+  { id: 'deepsea', name: 'Deep Sea', emoji: '🐙', mascot: '🦈', dark: true, particle: 'deepbubbles', colors: pal(true, '#06323A', '#0B4651', '#DFF6F6', '#7FC9C9', '#2EE6C5', '#14B89C', '#FFB84D', '#0F5560', '#146571', '#0E6F75') },
+  { id: 'coderain', name: 'Code Rain', emoji: '💻', mascot: '🤖', dark: true, particle: 'code', font: 'pixel', colors: pal(true, '#050805', '#0C140D', '#B8F5C6', '#3FAE5A', '#39FF6A', '#1FCC4C', '#B8F5C6', '#12301A', '#1F6B32', '#0F3D1B') },
+  { id: 'forge', name: 'Forge', emoji: '🔥', mascot: '⚒️', dark: true, particle: 'embers', colors: pal(true, '#241010', '#381818', '#F4DCD6', '#C98A80', '#FF4A1C', '#E03A12', '#FFB02E', '#4A2020', '#5A2626', '#8A1F0C') },
+  { id: 'spacecadet', name: 'Space Cadet', emoji: '🚀', mascot: '👨‍🚀', dark: true, particle: 'starfield', colors: pal(true, '#0B1230', '#16204A', '#E3E8FF', '#8E9BD6', '#6EA8FF', '#4A86E0', '#FFD166', '#1E2A5E', '#26336E', '#2A3F8F') },
+  { id: 'thunderstorm', name: 'Thunderstorm', emoji: '⛈️', mascot: '⚡', dark: true, fx: 'lightning', particle: 'storm', colors: pal(true, '#2A3340', '#364252', '#E6ECF3', '#93A3B8', '#E8E04A', '#C9C12E', '#6EA8FF', '#425064', '#4A5870', '#46566E') },
 
   // ---- basic, calm ----
   { id: 'clean', name: 'Clean', emoji: '🤍', mascot: '💊', dark: false, colors: pal(false, '#F7F8FA', '#FFFFFF', '#1F2430', '#6B7280', '#3B82F6', '#2563EB', '#10B981', '#E3EAF6', '#E1E6EE') },

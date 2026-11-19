@@ -55,6 +55,28 @@ export async function checkForUpdate(): Promise<UpdateInfo | null> {
   }
 }
 
+/** Manual check for the Updates card: ignores the 30-minute pause and says why when there's nothing to install. */
+export async function checkNow(): Promise<UpdateInfo | 'current' | 'error'> {
+  try {
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), 10000);
+    const res = await fetch(`https://api.github.com/repos/${REPO}/releases/latest`, {
+      headers: { Accept: 'application/vnd.github+json' },
+      signal: ctl.signal,
+    });
+    clearTimeout(timer);
+    if (!res.ok) return 'error';
+    const rel = (await res.json()) as { tag_name?: string; assets?: { name: string; browser_download_url: string }[] };
+    const version = (rel.tag_name ?? '').replace(/^v/i, '');
+    const apk = rel.assets?.find((x) => x.name.toLowerCase().endsWith('.apk'));
+    if (!version) return 'error';
+    if (!apk || !isNewer(version, currentVersion())) return 'current';
+    return { version, url: apk.browser_download_url };
+  } catch {
+    return 'error';
+  }
+}
+
 export async function dismissedVersion(): Promise<string | null> {
   try {
     return await AsyncStorage.getItem(DISMISSED_KEY);
