@@ -34,6 +34,7 @@ export function ReminderCheck() {
     <Card>
       <Text style={styles.title}>Reminder check</Text>
       <Row label="Notifications allowed" value={h ? (h.allowed ? 'Yes' : 'No') : '...'} ok={h ? h.allowed : undefined} />
+      <Row label="On-time alarms (exact)" value={h ? (h.exactAlarms ? 'Yes' : 'No, reminders may be late') : '...'} ok={h ? h.exactAlarms : undefined} />
       <Row label="Reminders queued" value={h ? String(h.queued) : '...'} />
       <Row label="Next dose reminder" value={next} />
       {h?.error ? <Row label="Problem" value={h.error} ok={false} /> : null}
