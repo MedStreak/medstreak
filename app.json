@@ -2,7 +2,7 @@
   "expo": {
     "name": "MedStreak",
     "slug": "medstreak",
-    "version": "1.5.2",
+    "version": "1.5.3",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -31,7 +31,7 @@
         "REQUEST_INSTALL_PACKAGES",
         "VIBRATE"
       ],
-      "versionCode": 10
+      "versionCode": 11
     },
     "web": {
       "favicon": "./assets/favicon.png"
