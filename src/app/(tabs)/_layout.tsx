@@ -32,7 +32,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="meds" options={tab('Meds', '💊')} />
       <Tabs.Screen name="calendar" options={tab('History', '🗓️')} />
       <Tabs.Screen name="goals" options={tab('Goals', '🏆')} />
-      <Tabs.Screen name="chat" options={tab('Chat', '💬')} />
+      <Tabs.Screen name="chat" options={tab('Cheers', '🦄')} />
       <Tabs.Screen name="themes" options={tab('Themes', '🎨')} />
     </Tabs>
   );
