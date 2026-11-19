@@ -57,6 +57,7 @@ export const defaultSettings: Settings = {
   surpriseBase: null,
   stickers: [],
   surprisesOpened: 0,
+  tabIcons: {},
 };
 
 const emptyState: Persisted = { meds: [], logs: {}, goals: [], settings: defaultSettings };
