@@ -15,12 +15,15 @@ import { DEFAULT_CUSTOM, THEMES } from '../lib/theme';
 import { ensurePermission, notifyRefill, rescheduleAll, setupNotifications } from '../lib/notifications';
 import {
   MILESTONES,
+  SURPRISE_EVERY,
+  SURPRISE_STICKERS,
   StreakInfo,
   adherence,
   celebrationMessage,
   computeStreak,
   dosesForDay,
   goalProgress,
+  surpriseProgress,
 } from '../lib/streak';
 import type {
   Celebration,
@@ -51,6 +54,9 @@ export const defaultSettings: Settings = {
   customTheme: DEFAULT_CUSTOM,
   particle: null,
   unlockedThemes: [],
+  surpriseBase: null,
+  stickers: [],
+  surprisesOpened: 0,
 };
 
 const emptyState: Persisted = { meds: [], logs: {}, goals: [], settings: defaultSettings };
@@ -65,6 +71,8 @@ interface Ctx {
   today: string;
   streak: StreakInfo;
   adherence30: number | null;
+  /** Completed check-in days toward the next surprise, out of SURPRISE_EVERY. */
+  surprise: number;
   celebration: Celebration | null;
   promptVisible: boolean;
   addMed: (m: Omit<Medication, 'id' | 'startDate' | 'active'>) => void;
@@ -172,6 +180,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   );
   const adherence30 = useMemo(() => adherence(data.meds, data.logs, today, 30), [data.meds, data.logs, today]);
 
+  const surprise = useMemo(
+    () => surpriseProgress(data.meds, data.logs, data.settings.surpriseBase, today),
+    [data.meds, data.logs, data.settings.surpriseBase, today],
+  );
+
   const pendingToday = useCallback(() => {
     const done = new Set(ref.current.logs[today] ?? []);
     return dosesForDay(ref.current.meds, today).filter((s) => !done.has(s.key));
@@ -210,6 +223,29 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       });
     }
   }, [loaded, streak, adherence30, data.goals, commit, pushCelebration]);
+
+  // ---- surprise: every SURPRISE_EVERY completed check-in days wins a sticker + an animated theme ----
+  useEffect(() => {
+    if (!loaded || surprise < SURPRISE_EVERY) return;
+    const cur = ref.current;
+    const theme = THEMES.find((t) => (t.particle || t.fx) && t.unlock !== undefined && !cur.settings.unlockedThemes.includes(t.id));
+    const sticker = SURPRISE_STICKERS.find((s) => !cur.settings.stickers.includes(s)) ?? null;
+    commit({
+      ...cur,
+      settings: {
+        ...cur.settings,
+        surpriseBase: dateKey(),
+        surprisesOpened: cur.settings.surprisesOpened + 1,
+        unlockedThemes: theme ? [...cur.settings.unlockedThemes, theme.id] : cur.settings.unlockedThemes,
+        stickers: sticker ? [...cur.settings.stickers, sticker] : cur.settings.stickers,
+      },
+    });
+    pushCelebration({
+      kind: 'goal',
+      title: 'Surprise unlocked! 🎁',
+      subtitle: `${SURPRISE_EVERY} check-in days of effort!${sticker ? `\nNew sticker: ${sticker}` : ''}${theme ? `\nAnimated theme: ${theme.emoji} ${theme.name}` : ''}\nFind them in Themes and when you edit your profile.`,
+    });
+  }, [loaded, surprise, commit, pushCelebration]);
 
   // ---- unlock animated themes as the best streak grows ----
   useEffect(() => {
@@ -403,6 +439,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     today,
     streak,
     adherence30,
+    surprise,
     celebration: celebrations[0] ?? null,
     promptVisible,
     addMed,
