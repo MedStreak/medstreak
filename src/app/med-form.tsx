@@ -44,7 +44,24 @@ export default function MedForm() {
       <Field label="Name" value={name} onChangeText={setName} placeholder="e.g. Vitamin D" autoFocus={!existing} />
       <Field label="Dosage (optional)" value={dosage} onChangeText={setDosage} placeholder="e.g. 10 mg" />
 
-      <Text style={styles.label}>Times each day</Text>
+      <Text style={styles.label}>How many times a day? ⏰</Text>
+      <View style={styles.presetRow}>
+        {[
+          { n: 1, label: 'Once', t: ['08:00'] },
+          { n: 2, label: 'Twice', t: ['08:00', '20:00'] },
+          { n: 3, label: '3 times', t: ['08:00', '14:00', '20:00'] },
+          { n: 4, label: '4 times', t: ['08:00', '12:00', '16:00', '20:00'] },
+        ].map((o) => (
+          <Pressable
+            key={o.n}
+            style={[styles.preset, times.length === o.n && styles.presetOn]}
+            onPress={() => setTimes(times.length === o.n ? times : o.t.slice(0, o.n).map((d, i) => times[i] ?? d))}
+          >
+            <Text style={[styles.presetText, times.length === o.n && { color: '#fff' }]}>{o.label}</Text>
+          </Pressable>
+        ))}
+      </View>
+      <Text style={styles.label}>Tap a time to change it</Text>
       {times.map((t, i) => (
         <View key={i} style={styles.timeRow}>
           <Pressable style={styles.timeChip} onPress={() => setEditing(i)}>
@@ -93,6 +110,10 @@ const styles = themedStyles(() => StyleSheet.create({
   container: { padding: 16, paddingBottom: 60 },
   label: { fontSize: 13, fontWeight: '700', color: colors.muted, marginBottom: 8, textTransform: 'uppercase' },
   timeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
+  presetRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 14 },
+  preset: { paddingVertical: 10, paddingHorizontal: 16, borderRadius: 999, backgroundColor: colors.chipBg },
+  presetOn: { backgroundColor: colors.primary },
+  presetText: { fontWeight: '800', color: colors.text },
   timeChip: { backgroundColor: colors.chipBg, paddingVertical: 12, paddingHorizontal: 18, borderRadius: 999 },
   timeText: { fontSize: 17, fontWeight: '800', color: colors.primaryDark },
   remove: { color: colors.danger, fontWeight: '700' },
