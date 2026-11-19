@@ -46,6 +46,12 @@
       ],
       "expo-apple-authentication",
       [
+        "expo-image-picker",
+        {
+          "photosPermission": "MedStreak uses your photos so you can pick a profile picture and banner."
+        }
+      ],
+      [
         "@react-native-google-signin/google-signin",
         {
           "iosUrlScheme": "com.googleusercontent.apps.REPLACE_WITH_REVERSED_IOS_CLIENT_ID"

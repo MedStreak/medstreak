@@ -2,152 +2,101 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ---------------------------------------------------------------------------
-    // FREE-TIER MODERATION (no Cloud Functions needed)
-    //
-    // Identity: every person has a permanent "key" = the uid of the FIRST account that was ever
-    // registered with their verified Google email (emailOwners/{email}). Delete the account and sign
-    // up again with the same email and you get the same key, so a ban follows the person.
-    //
-    // Strikes: strikes/{key}_1 and strikes/{key}_2 are two fixed "slots". Slot 2 can only be filled
-    // by a DIFFERENT reporter than slot 1, and each strike must be written in the same batch as the
-    // matching status/{key} change and the hiding of the reported message. The rules therefore count
-    // distinct reporters without a server:   status.level 1 = warned,  level 2 = banned.
-    // ---------------------------------------------------------------------------
-
+    // Signed in with a real, verified account (never anonymous).
     function authed() {
-      return request.auth != null && request.auth.token.email_verified == true;
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.firebase.sign_in_provider != 'anonymous';
     }
-    function hasMember() {
-      return exists(/databases/$(database)/documents/members/$(request.auth.uid));
-    }
-    function me() {
-      return get(/databases/$(database)/documents/members/$(request.auth.uid)).data;
-    }
-    function myKey() { return me().firstUid; }
+    function isMe(u) { return authed() && request.auth.uid == u; }
+    function str(v, n) { return v is string && v.size() <= n; }
 
-    function isBanned(key) {
-      return exists(/databases/$(database)/documents/status/$(key))
-        && get(/databases/$(database)/documents/status/$(key)).data.level >= 2;
-    }
-    function canChat() {
-      return authed() && hasMember()
-        && me().email == request.auth.token.email
-        && !isBanned(myKey());
+    // The creator's account id lives in config/creator, which can only be edited in the Firebase console.
+    function isCreator() {
+      return authed()
+        && exists(/databases/$(database)/documents/config/creator)
+        && get(/databases/$(database)/documents/config/creator).data.uid == request.auth.uid;
     }
 
-    // ---- who I am -----------------------------------------------------------------
+    match /config/{doc} {
+      allow read: if authed();
+      allow write: if false;
+    }
+
+    // Kept so existing accounts stay linked to one key.
     match /emailOwners/{email} {
-      allow get: if authed() && email == request.auth.token.email;
-      allow create: if authed() && email == request.auth.token.email
-        && request.resource.data.keys().hasOnly(['uid'])
-        && request.resource.data.uid == request.auth.uid
-        && existsAfter(/databases/$(database)/documents/members/$(request.auth.uid))
-        && getAfter(/databases/$(database)/documents/members/$(request.auth.uid)).data.firstUid == request.auth.uid;
-      allow list, update, delete: if false;
+      allow read: if authed();
+      allow create: if authed() && request.resource.data.keys().hasOnly(['uid']) && request.resource.data.uid == request.auth.uid;
     }
-
     match /members/{uid} {
-      allow get: if authed() && request.auth.uid == uid;
-      allow create: if authed() && request.auth.uid == uid
-        && request.resource.data.keys().hasOnly(['email', 'firstUid', 'createdAt'])
-        && request.resource.data.email == request.auth.token.email
-        && request.resource.data.createdAt == request.time
-        && (
-          // first account ever for this email: I become the key owner (written in the same batch)
-          (!exists(/databases/$(database)/documents/emailOwners/$(request.auth.token.email))
-            && request.resource.data.firstUid == uid
-            && existsAfter(/databases/$(database)/documents/emailOwners/$(request.auth.token.email))
-            && getAfter(/databases/$(database)/documents/emailOwners/$(request.auth.token.email)).data.uid == uid)
-          ||
-          // returning person with a new account: inherit the original key (and any ban with it)
-          (exists(/databases/$(database)/documents/emailOwners/$(request.auth.token.email))
-            && request.resource.data.firstUid == get(/databases/$(database)/documents/emailOwners/$(request.auth.token.email)).data.uid)
-        );
-      allow list, update, delete: if false;
+      allow read: if isMe(uid);
+      allow create: if isMe(uid);
     }
 
-    // ---- chat ---------------------------------------------------------------------
-    match /lobby/{msgId} {
-      allow read: if canChat();
-      allow create: if canChat()
-        && request.resource.data.keys().hasOnly(['uid', 'key', 'nickname', 'text', 'createdAt', 'bubble'])
+    function favOk(f) {
+      return f is map && f.keys().hasOnly(['song','artist','show','game','snack','comfort','place','fun'])
+        && str(f.get('song',''),60) && str(f.get('artist',''),60) && str(f.get('show',''),60)
+        && str(f.get('game',''),60) && str(f.get('snack',''),60) && str(f.get('comfort',''),60)
+        && str(f.get('place',''),60) && str(f.get('fun',''),60);
+    }
+    function tagsOk(l) { return l is list && l.size() <= 8; }
+
+    match /profiles/{uid} {
+      allow read: if authed();
+      allow create, update: if isMe(uid)
+        && request.resource.data.keys().hasOnly(['name','about','link','pronouns','mood','sticker','color','cardStyle','shape','interests','music','fav','streak','best','thumb','updatedAt'])
+        && str(request.resource.data.name, 30) && request.resource.data.name.size() >= 1
+        && str(request.resource.data.get('about',''), 240)
+        && str(request.resource.data.get('link',''), 200)
+        && str(request.resource.data.get('pronouns',''), 20)
+        && str(request.resource.data.get('mood',''), 12)
+        && str(request.resource.data.get('sticker',''), 8)
+        && str(request.resource.data.get('color',''), 7)
+        && str(request.resource.data.get('cardStyle',''), 10)
+        && str(request.resource.data.get('shape',''), 10)
+        && str(request.resource.data.get('thumb',''), 8000)
+        && tagsOk(request.resource.data.get('interests',[]))
+        && tagsOk(request.resource.data.get('music',[]))
+        && favOk(request.resource.data.get('fav',{}))
+        && request.resource.data.get('streak',0) is int
+        && request.resource.data.get('best',0) is int;
+      allow delete: if isMe(uid) || isCreator();
+    }
+
+    // Photos live here, shrunk to fit free storage.
+    match /profileImages/{uid} {
+      allow read: if authed();
+      allow create, update: if isMe(uid)
+        && request.resource.data.keys().hasOnly(['avatar','banner','updatedAt'])
+        && str(request.resource.data.get('avatar',''), 150000)
+        && str(request.resource.data.get('banner',''), 240000);
+      allow delete: if isMe(uid) || isCreator();
+    }
+
+    match /posts/{id} {
+      allow read: if authed();
+      allow create: if authed()
         && request.resource.data.uid == request.auth.uid
-        && request.resource.data.key == myKey()
-        && request.resource.data.text is string
-        && request.resource.data.text.size() > 0
-        && request.resource.data.text.size() <= 400
-        && (!('bubble' in request.resource.data) || (request.resource.data.bubble is string && request.resource.data.bubble.matches('^#[0-9A-Fa-f]{6}$')))
-        && request.resource.data.nickname is string
-        && request.resource.data.nickname.size() > 0
-        && request.resource.data.nickname.size() <= 20
+        && request.resource.data.keys().hasOnly(['uid','name','thumb','sticker','text','mood','kind','days','createdAt','cheers','reports'])
+        && str(request.resource.data.name, 30)
+        && str(request.resource.data.text, 200) && request.resource.data.text.size() >= 1
+        && str(request.resource.data.thumb, 8000)
+        && str(request.resource.data.sticker, 8)
+        && str(request.resource.data.mood, 12)
+        && request.resource.data.kind in ['status','streak']
+        && request.resource.data.cheers.size() == 0
+        && request.resource.data.reports.size() == 0
         && request.resource.data.createdAt == request.time;
-      // The only allowed edit: a reporter hides the message they just reported (same batch as the strike).
-      allow update: if canChat()
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['hidden'])
-        && request.resource.data.hidden == true
-        && (
-          (existsAfter(/databases/$(database)/documents/strikes/$(resource.data.key + '_1'))
-            && getAfter(/databases/$(database)/documents/strikes/$(resource.data.key + '_1')).data.messageId == msgId
-            && getAfter(/databases/$(database)/documents/strikes/$(resource.data.key + '_1')).data.reporterKey == myKey())
-          ||
-          (existsAfter(/databases/$(database)/documents/strikes/$(resource.data.key + '_2'))
-            && getAfter(/databases/$(database)/documents/strikes/$(resource.data.key + '_2')).data.messageId == msgId
-            && getAfter(/databases/$(database)/documents/strikes/$(resource.data.key + '_2')).data.reporterKey == myKey())
-        );
-      allow delete: if false;
-    }
-
-    match /presence/{uid} {
-      allow read: if canChat();
-      allow write: if canChat() && request.auth.uid == uid
-        && request.resource.data.nickname is string
-        && request.resource.data.nickname.size() <= 20;
-    }
-
-    // ---- moderation ---------------------------------------------------------------
-    // Readable only by the person it is about (so the app can show a warning / ban screen).
-    match /status/{key} {
-      allow get: if authed() && hasMember() && key == myKey();
-      allow create: if canChat()
-        && request.resource.data.keys().hasOnly(['level'])
-        && request.resource.data.level == 1
-        && existsAfter(/databases/$(database)/documents/strikes/$(key + '_1'))
-        && getAfter(/databases/$(database)/documents/strikes/$(key + '_1')).data.reporterKey == myKey();
-      allow update: if canChat()
-        && resource.data.level == 1
-        && request.resource.data.keys().hasOnly(['level'])
-        && request.resource.data.level == 2
-        && existsAfter(/databases/$(database)/documents/strikes/$(key + '_2'))
-        && getAfter(/databases/$(database)/documents/strikes/$(key + '_2')).data.reporterKey == myKey();
-      allow list, delete: if false;
-    }
-
-    // Write-only for users (nobody can read who reported whom).
-    match /strikes/{id} {
-      allow create: if canChat()
-        && request.resource.data.keys().hasOnly(['targetKey', 'reporterKey', 'messageId', 'reason', 'createdAt'])
-        && request.resource.data.reporterKey == myKey()
-        && request.resource.data.targetKey is string
-        && request.resource.data.targetKey != myKey()
-        && request.resource.data.createdAt == request.time
-        && request.resource.data.reason in ['harassment', 'hate', 'sexual', 'threats', 'spam', 'other']
-        // the reported message must really exist and belong to the person being reported
-        && get(/databases/$(database)/documents/lobby/$(request.resource.data.messageId)).data.key == request.resource.data.targetKey
-        && (
-          // 1st strike = warning: must be written together with status level 1
-          (id == request.resource.data.targetKey + '_1'
-            && existsAfter(/databases/$(database)/documents/status/$(request.resource.data.targetKey))
-            && getAfter(/databases/$(database)/documents/status/$(request.resource.data.targetKey)).data.level == 1)
-          ||
-          // 2nd strike = ban: slot 1 must exist and come from a DIFFERENT person
-          (id == request.resource.data.targetKey + '_2'
-            && exists(/databases/$(database)/documents/strikes/$(request.resource.data.targetKey + '_1'))
-            && get(/databases/$(database)/documents/strikes/$(request.resource.data.targetKey + '_1')).data.reporterKey != myKey()
-            && existsAfter(/databases/$(database)/documents/status/$(request.resource.data.targetKey))
-            && getAfter(/databases/$(database)/documents/status/$(request.resource.data.targetKey)).data.level == 2)
-        );
-      allow read, update, delete: if false;
+      // Anyone signed in may only touch THEIR OWN key inside cheers / reports.
+      allow update: if authed()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['cheers','reports'])
+        && (!('cheers' in request.resource.data.diff(resource.data).affectedKeys())
+            || (request.resource.data.cheers.diff(resource.data.cheers).affectedKeys().hasOnly([request.auth.uid])
+                && request.resource.data.cheers.get(request.auth.uid, 'x') is string
+                && str(request.resource.data.cheers.get(request.auth.uid, 'x'), 12)))
+        && (!('reports' in request.resource.data.diff(resource.data).affectedKeys())
+            || request.resource.data.reports.diff(resource.data.reports).affectedKeys().hasOnly([request.auth.uid]));
+      allow delete: if authed() && (resource.data.uid == request.auth.uid || isCreator());
     }
   }
 }
