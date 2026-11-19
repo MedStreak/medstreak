@@ -22,6 +22,7 @@ import {
   celebrationMessage,
   computeStreak,
   dosesForDay,
+  pillsPerDayAvg,
   goalProgress,
   surpriseProgress,
 } from '../lib/streak';
@@ -102,8 +103,7 @@ export function useApp(): Ctx {
 
 function daysOfSupply(m: Medication): number | null {
   if (m.pillsRemaining === null) return null;
-  const perDay = Math.max(1, m.pillsPerDose * m.times.length);
-  return Math.floor(m.pillsRemaining / perDay);
+  return Math.floor(m.pillsRemaining / pillsPerDayAvg(m));
 }
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
