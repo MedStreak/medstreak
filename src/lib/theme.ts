@@ -254,6 +254,16 @@ export function onPrimary(): string {
   const lum = 0.2126 * lin((n >> 16) & 255) + 0.7152 * lin((n >> 8) & 255) + 0.0722 * lin(n & 255);
   return lum > 0.45 ? '#1A1228' : '#FFFFFF';
 }
+/** Keeps `fg` if it is easy to read on `bg`, otherwise falls back to dark or white. Used for chips so words never vanish. */
+export function readableOn(fg: string, bg: string): string {
+  const lin = (v: number) => { const x = v / 255; return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); };
+  const L = (h: string) => { const [r, g, b] = hexToRgb(h); return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b); };
+  const a = L(fg);
+  const b = L(bg);
+  const ratio = (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+  if (ratio >= 4.5) return fg;
+  return b > 0.45 ? '#1A1228' : '#FFFFFF';
+}
 /** Live corner radii (also swapped in place). */
 export const radius = { ...CORNER_SETS.soft };
 
