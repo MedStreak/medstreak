@@ -140,7 +140,7 @@ export default function ProfileEdit() {
 
       <Text style={styles.h}>Pinned sticker</Text>
       <View style={styles.wrap}>
-        {STICKERS.map((s) => (
+        {[...STICKERS, ...data.settings.stickers].map((s) => (
           <Pressable key={s} onPress={() => setSticker(s)} style={[styles.sq, sticker === s && styles.sqOn]}><Text style={{ fontSize: 24 }}>{s}</Text></Pressable>
         ))}
       </View>

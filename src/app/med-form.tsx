@@ -96,8 +96,11 @@ export default function MedForm() {
         ))}
       </View>
 
-      <Text style={[styles.label, { marginTop: 8 }]}>Refill tracking (optional)</Text>
-      <Field label="Pills remaining" value={pills} onChangeText={setPills} keyboardType="number-pad" placeholder="Leave blank to skip" />
+      <Text style={[styles.label, { marginTop: 8 }]}>🧴 Refill tracking (optional)</Text>
+      <Text style={{ color: colors.muted, marginBottom: 10, lineHeight: 19 }}>
+        Add how many pills you have left and we’ll remind you before you run out. With this on, a day you skip never breaks your streak, it just doesn’t count toward surprises. 🎁
+      </Text>
+      <Field label="Pills left right now" value={pills} onChangeText={setPills} keyboardType="number-pad" placeholder="Leave blank to skip" />
       <Field label="Pills per dose" value={perDose} onChangeText={setPerDose} keyboardType="number-pad" />
       <Field label="Remind me when this many days are left" value={refillDays} onChangeText={setRefillDays} keyboardType="number-pad" />
 
