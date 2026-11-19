@@ -1,15 +1,21 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { Text } from 'react-native';
+import { Text, View } from 'react-native';
 import { colors, getTheme } from '../../lib/theme';
 import { useApp } from '../../state/AppState';
 
 /** Cute emoji tab icons: full-color when selected, softly faded otherwise. */
 const tab = (title: string, emoji: string, size = 1) => ({
   title,
-  tabBarIcon: ({ focused }: { focused: boolean }) => (
-    <Text style={{ fontSize: (focused ? 28 : 23) * size, opacity: focused ? 1 : 0.55 }}>{emoji}</Text>
-  ),
+  tabBarIcon: ({ focused }: { focused: boolean }) => {
+    const fs = (focused ? 26 : 22) * size;
+    // Fixed-height box + explicit line height + system font so emoji never get clipped by a theme font's metrics.
+    return (
+      <View style={{ height: 36, minWidth: 36, alignItems: 'center', justifyContent: 'center' }}>
+        <Text style={{ fontFamily: 'System', fontSize: fs, lineHeight: Math.round(fs * 1.3), includeFontPadding: false, textAlign: 'center', opacity: focused ? 1 : 0.55 }}>{emoji}</Text>
+      </View>
+    );
+  },
 });
 
 export default function TabsLayout() {

@@ -5,7 +5,7 @@ import { UpdateBanner } from '../../components/UpdateBanner';
 import { Button, Card, ProgressBar, SectionTitle } from '../../components/ui';
 import { formatTime } from '../../lib/dates';
 import { colors, getTheme, themedStyles } from '../../lib/theme';
-import { SURPRISE_EVERY, dosesForDay, motivationalMessage, nextMilestone } from '../../lib/streak';
+import { SURPRISE_EVERY, dosesForDay, motivationalMessage, nextMilestone, pillsPerDayAvg } from '../../lib/streak';
 import { useMoodLogs } from '../../lib/wellbeing';
 import { useApp } from '../../state/AppState';
 
@@ -32,7 +32,7 @@ export default function TodayScreen() {
 
   const lowSupply = data.meds.filter((m) => {
     if (!m.active || m.pillsRemaining === null) return false;
-    const days = Math.floor(m.pillsRemaining / Math.max(1, m.pillsPerDose * m.times.length));
+    const days = Math.floor(m.pillsRemaining / pillsPerDayAvg(m));
     return days <= m.refillDays;
   });
 

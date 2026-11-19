@@ -9,6 +9,22 @@ import { useApp } from '../../state/AppState';
 
 const BG_SWATCHES = ['#FFFFFF', '#FFE3EE', '#FFD6EC', '#FFEBD2', '#FFF3B0', '#E7F7B5', '#C9F7DE', '#CFEFFF', '#DDD0FF', '#F2E6C9', '#1E232B', '#10002B', '#0F2A18', '#183B2C'];
 const TEXT_SWATCHES = ['#1F2430', '#4A1530', '#2B1B4D', '#0F3340', '#12382A', '#4A3A1A', '#FFFFFF', '#FFF35C', '#E5FFD1', '#7DF9FF'];
+type T = (typeof THEMES)[number];
+const animated = (t: T) => !!(t.fx || t.particle);
+const FILTERS: { id: string; label: string; test: (t: T) => boolean }[] = [
+  { id: 'all', label: 'All', test: () => true },
+  { id: 'light', label: 'Light', test: (t) => !t.dark },
+  { id: 'dark', label: 'Dark', test: (t) => t.dark },
+  { id: 'animated', label: 'Animated', test: animated },
+  { id: 'unlock', label: 'Unlockable', test: (t) => t.unlock !== undefined },
+];
+const GROUPS: { id: string; label: string; test: (t: T) => boolean }[] = [
+  { id: 'animated', label: 'Animated', test: (t) => animated(t) && t.unlock === undefined },
+  { id: 'unlock', label: 'Unlockable', test: (t) => t.unlock !== undefined },
+  { id: 'light', label: 'Light', test: (t) => !t.dark && !animated(t) && t.unlock === undefined },
+  { id: 'dark', label: 'Dark', test: (t) => t.dark && !animated(t) && t.unlock === undefined },
+];
+
 const TAB_NAMES = [
   { id: 'index', label: 'Today', def: '🏠' },
   { id: 'meds', label: 'Meds', def: '💊' },
@@ -45,6 +61,37 @@ export default function ThemesScreen() {
   };
   const tap = () => Haptics.selectionAsync().catch(() => {});
   const [pickTab, setPickTab] = React.useState('index');
+  const [filter, setFilter] = React.useState<string>('all');
+  const renderTile = (t: (typeof THEMES)[number]) => {
+    const selected = t.id === current;
+    const locked = t.unlock !== undefined && !unlockedThemes.includes(t.id);
+    return (
+      <Pressable
+        key={t.id}
+        accessibilityRole="button"
+        accessibilityLabel={`${t.name} theme${selected ? ', selected' : ''}${locked ? ', locked' : ''}`}
+        onPress={() => {
+          tap();
+          if (locked) {
+            Alert.alert('Locked 🔒', `Reach a ${t.unlock}-day streak to unlock ${t.name}. Your best so far is ${streak.best} days. You can do it!`);
+            return;
+          }
+          updateSettings({ theme: t.id });
+        }}
+        style={[styles.tile, { backgroundColor: t.colors.bg, borderColor: selected ? colors.primary : t.colors.border }, selected && styles.tileOn, locked && { opacity: 0.55 }]}
+      >
+        <View style={[styles.tileHero, { backgroundColor: t.colors.hero }]}>
+          <Text style={{ fontSize: 18 }}>{locked ? '🔒' : t.mascot}</Text>
+        </View>
+        <View style={[styles.tileDot, { backgroundColor: t.colors.primary }]} />
+        <Text numberOfLines={1} style={[styles.tileName, { color: t.colors.text }]}>{t.name}</Text>
+        <Text numberOfLines={1} style={[styles.tileSub, { color: t.colors.muted }]}>
+          {locked ? `${t.unlock}-day streak` : t.fx || t.particle ? '✨ Animated' : t.dark ? 'Dark' : 'Light'}
+        </Text>
+        {selected && <Text style={styles.tileCheck}>✓</Text>}
+      </Pressable>
+    );
+  };
   const tabIcons = data.settings.tabIcons ?? {};
   const setTabIcon = (id: string, emoji: string | null) => {
     tap();
@@ -59,46 +106,29 @@ export default function ThemesScreen() {
       <Text style={styles.lead}>Make MedStreak feel like yours. Everything saves automatically.</Text>
 
       <SectionTitle>Theme</SectionTitle>
-      {THEMES.map((t) => {
-        const selected = t.id === current;
-        const locked = t.unlock !== undefined && !unlockedThemes.includes(t.id);
-        return (
-          <Pressable
-            key={t.id}
-            accessibilityRole="button"
-            accessibilityLabel={`${t.name} theme${selected ? ', selected' : ''}`}
-            onPress={() => {
-              tap();
-              if (locked) {
-                Alert.alert('Locked 🔒', `Reach a ${t.unlock}-day streak to unlock ${t.name}. Your best so far is ${streak.best} days. You can do it!`);
-                return;
-              }
-              updateSettings({ theme: t.id });
-            }}
-          >
-            <Card style={[styles.card, selected && styles.cardSelected, locked && { opacity: 0.55 }]}>
-              <View style={[styles.preview, { backgroundColor: t.colors.bg, borderColor: t.colors.border }]}>
-                <View style={[styles.previewHero, { backgroundColor: t.colors.hero }]}>
-                  <Text style={{ fontSize: 14 }}>{t.mascot}</Text>
-                </View>
-                <View style={[styles.previewCard, { backgroundColor: t.colors.card, borderColor: t.colors.border }]}>
-                  <View style={[styles.previewDot, { backgroundColor: t.colors.primary }]} />
-                  <View style={[styles.previewLine, { backgroundColor: t.colors.muted }]} />
-                </View>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.name}>
-                  {t.emoji} {t.name}
-                </Text>
-                <Text style={styles.sub}>
-                  {locked ? `🔒 Unlocks at a ${t.unlock}-day streak` : `${t.dark ? 'Dark mode' : 'Light'}${t.fx || t.particle ? ' · ✨ Animated' : ''}`}
-                </Text>
-              </View>
-              {selected && <Text style={styles.check}>✓</Text>}
-            </Card>
+      <View style={styles.filterRow}>
+        {FILTERS.map((f) => (
+          <Pressable key={f.id} onPress={() => { tap(); setFilter(f.id); }} style={[styles.chip, filter === f.id && styles.chipOn]}>
+            <Text style={[styles.chipText, filter === f.id && { color: '#fff' }]}>{f.label}</Text>
           </Pressable>
-        );
-      })}
+        ))}
+      </View>
+      {filter === 'all' ? (
+        GROUPS.map((g) => {
+          const list = THEMES.filter(g.test);
+          if (list.length === 0) return null;
+          return (
+            <View key={g.id}>
+              <Text style={styles.groupTitle}>{g.label} · {list.length}</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.themeRow}>
+                {list.map(renderTile)}
+              </ScrollView>
+            </View>
+          );
+        })
+      ) : (
+        <View style={styles.themeGrid}>{THEMES.filter(FILTERS.find((f) => f.id === filter)!.test).map(renderTile)}</View>
+      )}
 
       <SectionTitle>Particles</SectionTitle>
       <Text style={styles.sub}>Falling, rising or drifting things on top of any theme.</Text>
@@ -256,6 +286,17 @@ const styles = themedStyles(() =>
     emojiGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 12 },
     emojiCell: { width: 44, height: 44, borderRadius: 12, backgroundColor: colors.chipBg, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: 'transparent' },
     emojiCellOn: { borderColor: colors.primary },
+    filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 6 },
+    groupTitle: { fontSize: 13, fontWeight: '800', color: colors.muted, marginTop: 12, marginBottom: 8, textTransform: 'uppercase' },
+    themeRow: { gap: 10, paddingRight: 8 },
+    themeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 8 },
+    tile: { width: 104, borderRadius: 14, borderWidth: 2, padding: 8, alignItems: 'center' },
+    tileOn: { borderWidth: 3 },
+    tileHero: { width: '100%', height: 36, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
+    tileDot: { width: 10, height: 10, borderRadius: 5, marginTop: 6 },
+    tileName: { fontSize: 12, fontWeight: '800', marginTop: 4 },
+    tileSub: { fontSize: 10, fontWeight: '700' },
+    tileCheck: { position: 'absolute', top: 2, right: 6, fontSize: 14, color: '#fff', fontWeight: '900' },
     chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 },
     chip: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 16, backgroundColor: colors.chipBg },
     chipOn: { backgroundColor: colors.primary },

@@ -7,6 +7,7 @@ import { UpdatesCard } from '../../components/UpdatesCard';
 import { Button, Card, SectionTitle } from '../../components/ui';
 import { formatTime, fromHHmm, toHHmm } from '../../lib/dates';
 import { colors, themedStyles } from '../../lib/theme';
+import { scheduleLabel } from '../../lib/streak';
 import { useApp } from '../../state/AppState';
 
 export default function MedsScreen() {
@@ -62,7 +63,7 @@ export default function MedsScreen() {
                   <Text style={styles.name}>{m.name}</Text>
                   <Text style={styles.muted}>
                     {m.dosage ? `${m.dosage} · ` : ''}
-                    {m.times.map(formatTime).join(', ')}
+                    {scheduleLabel(m)} · {m.times.map(formatTime).join(', ')}
                   </Text>
                   {m.pillsRemaining !== null && <Text style={styles.muted}>{m.pillsRemaining} pills left</Text>}
                 </View>
