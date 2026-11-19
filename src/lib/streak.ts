@@ -1,4 +1,4 @@
-import { addDays, daysBetween, dayOfYear } from './dates';
+import { addDays, daysBetween, dayOfYear, parseKey } from './dates';
 import type { DoseKey, Goal, Medication } from './types';
 
 export const MILESTONES = [3, 7, 14, 30, 60, 100, 180, 365];
@@ -17,9 +17,27 @@ export function dosesForDay(meds: Medication[], day: string): DoseSlot[] {
   const slots: DoseSlot[] = [];
   for (const med of meds) {
     if (!med.active || med.startDate > day) continue;
+    if (med.days && med.days.length > 0 && !med.days.includes(parseKey(day).getDay())) continue;
     for (const time of med.times) slots.push({ key: doseKey(med.id, time), med, time });
   }
   return slots.sort((a, b) => a.time.localeCompare(b.time) || a.med.name.localeCompare(b.med.name));
+}
+
+export const WEEKDAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const WEEKDAY_LONG = ['Sundays', 'Mondays', 'Tuesdays', 'Wednesdays', 'Thursdays', 'Fridays', 'Saturdays'];
+
+/** "Every day", "Mondays", or "Mon, Thu". */
+export function scheduleLabel(med: Pick<Medication, 'days'>): string {
+  const d = med.days;
+  if (!d || d.length === 0 || d.length >= 7) return 'Every day';
+  const sorted = [...d].sort((a, b) => a - b);
+  return sorted.length === 1 ? WEEKDAY_LONG[sorted[0]] : sorted.map((x) => WEEKDAY_SHORT[x]).join(', ');
+}
+
+/** Average pills used per calendar day (weekly meds use a fraction of a pill per day). */
+export function pillsPerDayAvg(med: Pick<Medication, 'days' | 'times' | 'pillsPerDose'>): number {
+  const frac = med.days && med.days.length > 0 && med.days.length < 7 ? med.days.length / 7 : 1;
+  return Math.max(0.01, med.pillsPerDose * med.times.length * frac);
 }
 
 export type DayStatus = 'complete' | 'partial' | 'missed' | 'none' | 'future' | 'pending';

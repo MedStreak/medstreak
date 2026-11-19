@@ -13,6 +13,8 @@ export interface Medication {
   /** Alert when this many days of supply (or fewer) remain. */
   refillDays: number;
   active: boolean;
+  /** Days of the week (0 = Sunday ... 6 = Saturday) this is taken. Missing or null = every day. */
+  days?: number[] | null;
 }
 
 /** Key of a single scheduled dose: `${medId}|${HH:mm}`. */

@@ -79,22 +79,40 @@ async function rescheduleInner(meds: Medication[], settings: Settings): Promise<
     for (const time of med.times) {
       const [hour, minute] = time.split(':').map(Number);
       const body = REMINDER_COPY[i++ % REMINDER_COPY.length].replace('{med}', med.name);
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: `${med.name}${med.dosage ? ` · ${med.dosage}` : ''}`,
-          body,
-          categoryIdentifier: CATEGORY_DOSE,
-          data: { type: 'dose', medId: med.id, time },
-          sound: true,
-        },
-        trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.DAILY,
-          hour,
-          minute,
-          channelId: CHANNEL_ID,
-          delivery: 'alarmClock',
-        },
-      });
+      const content = {
+        title: `${med.name}${med.dosage ? ` · ${med.dosage}` : ''}`,
+        body,
+        categoryIdentifier: CATEGORY_DOSE,
+        data: { type: 'dose', medId: med.id, time },
+        sound: true,
+      };
+      if (med.days && med.days.length > 0 && med.days.length < 7) {
+        // Weekly or specific days: one repeating weekly alarm per chosen day (expo weekdays: 1 = Sunday).
+        for (const d of med.days) {
+          await Notifications.scheduleNotificationAsync({
+            content,
+            trigger: {
+              type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
+              weekday: d + 1,
+              hour,
+              minute,
+              channelId: CHANNEL_ID,
+              delivery: 'alarmClock',
+            },
+          });
+        }
+      } else {
+        await Notifications.scheduleNotificationAsync({
+          content,
+          trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.DAILY,
+            hour,
+            minute,
+            channelId: CHANNEL_ID,
+            delivery: 'alarmClock',
+          },
+        });
+      }
     }
   }
 
@@ -114,45 +132,6 @@ async function rescheduleInner(meds: Medication[], settings: Settings): Promise<
       },
     });
   }
-}
-
-export interface ReminderHealth {
-  allowed: boolean;
-  queued: number;
-  nextAt: Date | null;
-  error: string | null;
-  exactAlarms: boolean;
-}
-
-/** What the "Reminder check" card shows: permission state and what is actually queued. */
-export async function reminderHealth(meds: Medication[]): Promise<ReminderHealth> {
-  const perm = await Notifications.getPermissionsAsync();
-  let exact = true;
-  try {
-    exact = (await Notifications.getExactAlarmPermissionsAsync()).granted;
-  } catch {}
-  const list = await Notifications.getAllScheduledNotificationsAsync();
-  const now = new Date();
-  let next: Date | null = null;
-  for (const m of meds) {
-    if (!m.active) continue;
-    for (const t of m.times) {
-      const [h, mi] = t.split(':').map(Number);
-      const d = new Date(now);
-      d.setHours(h, mi, 0, 0);
-      if (d <= now) d.setDate(d.getDate() + 1);
-      if (!next || d < next) next = d;
-    }
-  }
-  return { allowed: perm.granted, queued: list.length, nextAt: next, error: lastScheduleError, exactAlarms: exact };
-}
-
-/** Fires a test reminder in 10 seconds so the person can confirm notifications really arrive. */
-export async function sendTestReminder(): Promise<void> {
-  await Notifications.scheduleNotificationAsync({
-    content: { title: 'MedStreak test', body: 'It works! Your reminders will arrive like this. 🎉', sound: true },
-    trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: new Date(Date.now() + 10000), channelId: CHANNEL_ID, delivery: 'alarmClock' },
-  });
 }
 
 export async function snoozeDose(medName: string, medId: string, time: string): Promise<void> {
@@ -180,5 +159,49 @@ export async function notifyRefill(medName: string, daysLeft: number): Promise<v
       data: { type: 'refill' },
     },
     trigger: null,
+  });
+}
+
+export interface ReminderHealth {
+  allowed: boolean;
+  queued: number;
+  nextAt: Date | null;
+  error: string | null;
+  exactAlarms: boolean;
+}
+
+/** What the "Reminder check" card shows: permission state and what is actually queued. */
+export async function reminderHealth(meds: Medication[]): Promise<ReminderHealth> {
+  const perm = await Notifications.getPermissionsAsync();
+  let exact = true;
+  try {
+    exact = (await Notifications.getExactAlarmPermissionsAsync()).granted;
+  } catch {}
+  const list = await Notifications.getAllScheduledNotificationsAsync();
+  const now = new Date();
+  let next: Date | null = null;
+  for (const m of meds) {
+    if (!m.active) continue;
+    for (const t of m.times) {
+      const [h, mi] = t.split(':').map(Number);
+      for (let add = 0; add < 8; add++) {
+        const d = new Date(now);
+        d.setDate(d.getDate() + add);
+        d.setHours(h, mi, 0, 0);
+        if (d <= now) continue;
+        if (m.days && m.days.length > 0 && !m.days.includes(d.getDay())) continue;
+        if (!next || d < next) next = d;
+        break;
+      }
+    }
+  }
+  return { allowed: perm.granted, queued: list.length, nextAt: next, error: lastScheduleError, exactAlarms: exact };
+}
+
+/** Fires a test reminder in 10 seconds so the person can confirm notifications really arrive. */
+export async function sendTestReminder(): Promise<void> {
+  await Notifications.scheduleNotificationAsync({
+    content: { title: 'MedStreak test', body: 'It works! Your reminders will arrive like this. 🎉', sound: true },
+    trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: new Date(Date.now() + 10000), channelId: CHANNEL_ID, delivery: 'alarmClock' },
   });
 }

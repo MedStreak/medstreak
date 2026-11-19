@@ -202,6 +202,8 @@ export function useProfile(uid: string | null | undefined): Profile | null | und
       setP(uid ? undefined : null);
       return;
     }
+    // A new uid means "loading", not "no profile": never let the previous null leak through.
+    setP(undefined);
     return onSnapshot(
       doc(fb.db, 'profiles', uid),
       (snap) => setP(snap.exists() ? toProfile(uid, snap.data()) : null),
