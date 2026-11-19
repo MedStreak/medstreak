@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { ReminderCheck } from '../../components/ReminderCheck';
+import { UpdatesCard } from '../../components/UpdatesCard';
 import { Button, Card, SectionTitle } from '../../components/ui';
 import { formatTime, fromHHmm, toHHmm } from '../../lib/dates';
 import { colors, themedStyles } from '../../lib/theme';
@@ -47,6 +48,7 @@ export default function MedsScreen() {
       </Card>
 
       <ReminderCheck />
+      <UpdatesCard />
 
       <SectionTitle>My medications</SectionTitle>
       {meds.length === 0 && <Text style={styles.muted}>Nothing here yet.</Text>}
