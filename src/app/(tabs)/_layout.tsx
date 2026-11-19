@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { Text, View } from 'react-native';
+import { currentFontFamily } from '../../lib/fonts';
 import { colors, getTheme } from '../../lib/theme';
 import { useApp } from '../../state/AppState';
 
@@ -27,10 +28,10 @@ export default function TabsLayout() {
       screenOptions={{
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.muted,
-        tabBarLabelStyle: { fontWeight: '700' },
+        tabBarLabelStyle: { fontWeight: '700', fontFamily: currentFontFamily() },
         headerStyle: { backgroundColor: colors.bg },
         headerShadowVisible: false,
-        headerTitleStyle: { fontWeight: '800', color: colors.text },
+        headerTitleStyle: { fontWeight: '800', color: colors.text, fontFamily: currentFontFamily() },
         sceneStyle: { backgroundColor: colors.bg },
         tabBarStyle: { backgroundColor: colors.card, borderTopColor: colors.border },
       }}
