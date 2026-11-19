@@ -50,7 +50,7 @@ export default function ProfileEdit() {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    if (loaded || profile === undefined) return;
+    if (loaded || !user.uid || profile === undefined) return;
     setLoaded(true);
     if (!profile) return;
     setName(profile.name);
@@ -65,7 +65,7 @@ export default function ProfileEdit() {
     setInterests(profile.interests.join(', '));
     setMusic(profile.music.join(', '));
     setFav(profile.fav);
-  }, [profile, loaded]);
+  }, [profile, loaded, user.uid]);
 
   if (!user.uid) return <View style={styles.center}><Text style={styles.muted}>Sign in from the Cheers tab first.</Text></View>;
   const uid = user.uid;

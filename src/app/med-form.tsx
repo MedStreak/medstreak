@@ -5,6 +5,7 @@ import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, View } from '
 import { Button, Field } from '../components/ui';
 import { formatTime, fromHHmm, toHHmm } from '../lib/dates';
 import { colors, pillColors, themedStyles } from '../lib/theme';
+import { WEEKDAY_SHORT } from '../lib/streak';
 import { useApp } from '../state/AppState';
 
 export default function MedForm() {
@@ -21,14 +22,18 @@ export default function MedForm() {
   const [perDose, setPerDose] = useState(String(existing?.pillsPerDose ?? 1));
   const [refillDays, setRefillDays] = useState(String(existing?.refillDays ?? 7));
   const [editing, setEditing] = useState<number | null>(null);
+  const [days, setDays] = useState<number[]>(existing?.days && existing.days.length > 0 && existing.days.length < 7 ? existing.days : []);
+  const [mode, setMode] = useState<'daily' | 'weekly' | 'days'>(!days.length ? 'daily' : days.length === 1 ? 'weekly' : 'days');
 
   const save = () => {
     if (!name.trim()) return Alert.alert('Name needed', 'What’s this medication called?');
     if (times.length === 0) return Alert.alert('Add a time', 'Pick at least one time of day.');
+    if (mode !== 'daily' && days.length === 0) return Alert.alert('Pick a day', 'Which day of the week do you take this?');
     const payload = {
       name: name.trim(),
       dosage: dosage.trim(),
       times: Array.from(new Set(times)).sort(),
+      days: mode === 'daily' ? null : [...days].sort((a, b) => a - b),
       color,
       pillsRemaining: pills.trim() === '' ? null : Math.max(0, parseInt(pills, 10) || 0),
       pillsPerDose: Math.max(1, parseInt(perDose, 10) || 1),
@@ -44,7 +49,45 @@ export default function MedForm() {
       <Field label="Name" value={name} onChangeText={setName} placeholder="e.g. Vitamin D" autoFocus={!existing} />
       <Field label="Dosage (optional)" value={dosage} onChangeText={setDosage} placeholder="e.g. 10 mg" />
 
-      <Text style={styles.label}>How many times a day? ⏰</Text>
+      <Text style={styles.label}>How often? 📅</Text>
+      <View style={styles.presetRow}>
+        {([['daily', 'Every day'], ['weekly', 'Once a week'], ['days', 'Specific days']] as const).map(([m, label]) => (
+          <Pressable
+            key={m}
+            style={[styles.preset, mode === m && styles.presetOn]}
+            onPress={() => {
+              setMode(m);
+              if (m === 'daily') setDays([]);
+              else if (m === 'weekly') setDays(days.length ? [days[0]] : [new Date().getDay()]);
+              else if (!days.length) setDays([new Date().getDay()]);
+            }}
+          >
+            <Text style={[styles.presetText, mode === m && { color: '#fff' }]}>{label}</Text>
+          </Pressable>
+        ))}
+      </View>
+      {mode !== 'daily' && (
+        <>
+          <Text style={styles.label}>{mode === 'weekly' ? 'Which day?' : 'Which days?'}</Text>
+          <View style={styles.presetRow}>
+            {WEEKDAY_SHORT.map((w, d) => {
+              const on = days.includes(d);
+              return (
+                <Pressable
+                  key={w}
+                  style={[styles.preset, on && styles.presetOn]}
+                  onPress={() => setDays(mode === 'weekly' ? [d] : on ? days.filter((x) => x !== d) : [...days, d])}
+                >
+                  <Text style={[styles.presetText, on && { color: '#fff' }]}>{w}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+          <Text style={styles.hint}>Other days never count against your streak for this one.</Text>
+        </>
+      )}
+
+      <Text style={styles.label}>{mode === 'daily' ? 'How many times a day? ⏰' : 'What time? ⏰'}</Text>
       <View style={styles.presetRow}>
         {[
           { n: 1, label: 'Once', t: ['08:00'] },
@@ -114,6 +157,7 @@ const styles = themedStyles(() => StyleSheet.create({
   label: { fontSize: 13, fontWeight: '700', color: colors.muted, marginBottom: 8, textTransform: 'uppercase' },
   timeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
   presetRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 14 },
+  hint: { color: colors.muted, marginTop: -6, marginBottom: 14, lineHeight: 19 },
   preset: { paddingVertical: 10, paddingHorizontal: 16, borderRadius: 999, backgroundColor: colors.chipBg },
   presetOn: { backgroundColor: colors.primary },
   presetText: { fontWeight: '800', color: colors.text },
