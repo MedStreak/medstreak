@@ -102,26 +102,31 @@ export function setCurrentFont(key: FontKey | null | undefined) {
   current = key ? FONT_FILES[key]?.family : undefined;
 }
 
+/** The font family every screen should use right now, or undefined for the system font. */
+export function currentFontFamily(): string | undefined {
+  return current;
+}
+
 let patched = false;
 /**
  * Makes every <Text> use the theme's font unless a style sets its own.
- * React Native 0.8x builds Text as a plain function component (no .render), so we swap the module's
- * default export for a thin wrapper. `import { Text } from 'react-native'` reads that export lazily, so
- * every screen picks it up. Safe to call more than once.
+ * In React Native 0.88 the Text module's `default` export is a read-only getter, so it can't be reassigned.
+ * Instead we replace the `Text` getter on the `react-native` package object (a plain, configurable object),
+ * which is what every `import { Text } from 'react-native'` reads at render time. Safe to call more than once.
  */
 export function installTextFont() {
   if (patched) return;
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const mod = require('react-native/Libraries/Text/Text') as { default: React.ComponentType<any> };
-    const Orig = mod.default;
+    const rn = require('react-native') as { Text: React.ComponentType<any> };
+    const Orig = rn.Text;
     if (!Orig) return;
     const Wrapped = (props: any) =>
       React.createElement(Orig, current ? { ...props, style: [{ fontFamily: current }, props.style] } : props);
     Wrapped.displayName = 'Text';
-    mod.default = Wrapped as unknown as React.ComponentType<any>;
+    Object.defineProperty(rn, 'Text', { configurable: true, enumerable: true, get: () => Wrapped });
     patched = true;
   } catch {
-    // If React Native ever moves this file, the app still works with the system font.
+    // If this ever fails the app still works with the system font.
   }
 }
