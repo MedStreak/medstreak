@@ -149,7 +149,7 @@ export const THEMES: ThemeDef[] = [
   { id: 'coderain', name: 'Code Rain', emoji: '💻', mascot: '🤖', dark: true, particle: 'code', font: 'pixel', colors: pal(true, '#050805', '#0C140D', '#B8F5C6', '#3FAE5A', '#39FF6A', '#1FCC4C', '#B8F5C6', '#12301A', '#1F6B32', '#0F3D1B') },
   { id: 'forge', name: 'Forge', emoji: '🔥', mascot: '⚒️', dark: true, particle: 'embers', colors: pal(true, '#241010', '#381818', '#F4DCD6', '#C98A80', '#FF4A1C', '#E03A12', '#FFB02E', '#4A2020', '#5A2626', '#8A1F0C') },
   { id: 'spacecadet', name: 'Space Cadet', emoji: '🚀', mascot: '👨‍🚀', dark: true, particle: 'starfield', colors: pal(true, '#0B1230', '#16204A', '#E3E8FF', '#8E9BD6', '#6EA8FF', '#4A86E0', '#FFD166', '#1E2A5E', '#26336E', '#2A3F8F') },
-  { id: 'thunderstorm', name: 'Thunderstorm', emoji: '⛈️', mascot: '⚡', dark: true, fx: 'lightning', particle: 'storm', colors: pal(true, '#2A3340', '#364252', '#E6ECF3', '#93A3B8', '#E8E04A', '#C9C12E', '#6EA8FF', '#425064', '#4A5870', '#46566E') },
+  { id: 'arcticnight', name: 'Arctic Night', emoji: '🧊', mascot: '🐧', dark: true, particle: 'snow', colors: pal(true, '#0F1C2B', '#1A2B40', '#E4F1FF', '#8FAAC4', '#6FD3FF', '#3FB4E8', '#FFD166', '#223A55', '#2C4766', '#1F5A80') },
 
   // ---- basic, calm ----
   { id: 'clean', name: 'Clean', emoji: '🤍', mascot: '💊', dark: false, colors: pal(false, '#F7F8FA', '#FFFFFF', '#1F2430', '#6B7280', '#3B82F6', '#2563EB', '#10B981', '#E3EAF6', '#E1E6EE') },
