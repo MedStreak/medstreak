@@ -42,6 +42,14 @@ function Themed() {
           options={{ title: 'Edit profile', headerStyle: { backgroundColor: colors.bg }, headerTitleStyle: { color: colors.text } }}
         />
         <Stack.Screen
+          name="checkin"
+          options={{ presentation: 'modal', title: 'Check-in', headerStyle: { backgroundColor: colors.bg }, headerTitleStyle: { color: colors.text } }}
+        />
+        <Stack.Screen
+          name="emergency"
+          options={{ title: 'Emergency card', headerStyle: { backgroundColor: colors.bg }, headerTitleStyle: { color: colors.text } }}
+        />
+        <Stack.Screen
           name="med-form"
           options={{
             presentation: 'modal',
