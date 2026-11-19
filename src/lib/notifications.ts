@@ -92,6 +92,7 @@ async function rescheduleInner(meds: Medication[], settings: Settings): Promise<
           hour,
           minute,
           channelId: CHANNEL_ID,
+          delivery: 'alarmClock',
         },
       });
     }
@@ -109,6 +110,7 @@ async function rescheduleInner(meds: Medication[], settings: Settings): Promise<
         hour: settings.checkInHour,
         minute: settings.checkInMinute,
         channelId: CHANNEL_ID,
+        delivery: 'alarmClock',
       },
     });
   }
@@ -119,11 +121,16 @@ export interface ReminderHealth {
   queued: number;
   nextAt: Date | null;
   error: string | null;
+  exactAlarms: boolean;
 }
 
 /** What the "Reminder check" card shows: permission state and what is actually queued. */
 export async function reminderHealth(meds: Medication[]): Promise<ReminderHealth> {
   const perm = await Notifications.getPermissionsAsync();
+  let exact = true;
+  try {
+    exact = (await Notifications.getExactAlarmPermissionsAsync()).granted;
+  } catch {}
   const list = await Notifications.getAllScheduledNotificationsAsync();
   const now = new Date();
   let next: Date | null = null;
@@ -137,14 +144,14 @@ export async function reminderHealth(meds: Medication[]): Promise<ReminderHealth
       if (!next || d < next) next = d;
     }
   }
-  return { allowed: perm.granted, queued: list.length, nextAt: next, error: lastScheduleError };
+  return { allowed: perm.granted, queued: list.length, nextAt: next, error: lastScheduleError, exactAlarms: exact };
 }
 
 /** Fires a test reminder in 10 seconds so the person can confirm notifications really arrive. */
 export async function sendTestReminder(): Promise<void> {
   await Notifications.scheduleNotificationAsync({
     content: { title: 'MedStreak test', body: 'It works! Your reminders will arrive like this. 🎉', sound: true },
-    trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: 10, channelId: CHANNEL_ID },
+    trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: new Date(Date.now() + 10000), channelId: CHANNEL_ID, delivery: 'alarmClock' },
   });
 }
 
@@ -157,9 +164,10 @@ export async function snoozeDose(medName: string, medId: string, time: string): 
       data: { type: 'dose', medId, time },
     },
     trigger: {
-      type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-      seconds: SNOOZE_MINUTES * 60,
+      type: Notifications.SchedulableTriggerInputTypes.DATE,
+      date: new Date(Date.now() + SNOOZE_MINUTES * 60 * 1000),
       channelId: CHANNEL_ID,
+      delivery: 'alarmClock',
     },
   });
 }
