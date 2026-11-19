@@ -59,6 +59,9 @@ export const defaultSettings: Settings = {
   stickers: [],
   surprisesOpened: 0,
   tabIcons: {},
+  bgImage: null,
+  bgDim: 25,
+  bgSeeThrough: true,
 };
 
 const emptyState: Persisted = { meds: [], logs: {}, goals: [], settings: defaultSettings };
