@@ -67,6 +67,8 @@ export interface Settings {
   stickers: string[];
   /** How many surprises I have opened. */
   surprisesOpened: number;
+  /** Custom tab bar icons (emoji) by tab name; missing = default. */
+  tabIcons: Record<string, string>;
 }
 
 export interface Persisted {

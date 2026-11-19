@@ -1,4 +1,4 @@
-import { Text } from 'react-native';
+import React from 'react';
 import { Pacifico_400Regular } from '@expo-google-fonts/pacifico';
 import { Comfortaa_400Regular } from '@expo-google-fonts/comfortaa';
 import { BubblegumSans_400Regular } from '@expo-google-fonts/bubblegum-sans';
@@ -15,10 +15,25 @@ import { Lobster_400Regular } from '@expo-google-fonts/lobster';
 import { RubikWetPaint_400Regular } from '@expo-google-fonts/rubik-wet-paint';
 import { GloriaHallelujah_400Regular } from '@expo-google-fonts/gloria-hallelujah';
 import { Fredoka_400Regular } from '@expo-google-fonts/fredoka';
+import { PermanentMarker_400Regular } from '@expo-google-fonts/permanent-marker';
+import { Bungee_400Regular } from '@expo-google-fonts/bungee';
+import { Monoton_400Regular } from '@expo-google-fonts/monoton';
+import { Creepster_400Regular } from '@expo-google-fonts/creepster';
+import { Bangers_400Regular } from '@expo-google-fonts/bangers';
+import { Fascinate_400Regular } from '@expo-google-fonts/fascinate';
+import { SigmarOne_400Regular } from '@expo-google-fonts/sigmar-one';
+import { LilitaOne_400Regular } from '@expo-google-fonts/lilita-one';
+import { RubikBubbles_400Regular } from '@expo-google-fonts/rubik-bubbles';
+import { LuckiestGuy_400Regular } from '@expo-google-fonts/luckiest-guy';
+import { TitanOne_400Regular } from '@expo-google-fonts/titan-one';
+import { SpecialElite_400Regular } from '@expo-google-fonts/special-elite';
+import { RockSalt_400Regular } from '@expo-google-fonts/rock-salt';
+import { FrederickatheGreat_400Regular } from '@expo-google-fonts/fredericka-the-great';
 
 export type FontKey =
   | 'pacifico' | 'comfortaa' | 'bubblegum' | 'chewy' | 'baloo' | 'caveat' | 'merienda' | 'patrick'
-  | 'pixel' | 'kalam' | 'cormorant' | 'shrikhand' | 'lobster' | 'wetpaint' | 'gloria' | 'fredoka';
+  | 'pixel' | 'kalam' | 'cormorant' | 'shrikhand' | 'lobster' | 'wetpaint' | 'gloria' | 'fredoka'
+  | 'marker' | 'bungee' | 'monoton' | 'creepster' | 'bangers' | 'fascinate' | 'sigmar' | 'lilita' | 'rubikbubbles' | 'luckiest' | 'titan' | 'elite' | 'rocksalt' | 'fredericka';
 
 /** Bundled with the app (free, open-source Google Fonts), so they work offline. */
 export const FONT_FILES: Record<FontKey, { family: string; file: number }> = {
@@ -38,6 +53,20 @@ export const FONT_FILES: Record<FontKey, { family: string; file: number }> = {
   wetpaint: { family: 'RubikWetPaint_400Regular', file: RubikWetPaint_400Regular },
   gloria: { family: 'GloriaHallelujah_400Regular', file: GloriaHallelujah_400Regular },
   fredoka: { family: 'Fredoka_400Regular', file: Fredoka_400Regular },
+  marker: { family: 'PermanentMarker_400Regular', file: PermanentMarker_400Regular },
+  bungee: { family: 'Bungee_400Regular', file: Bungee_400Regular },
+  monoton: { family: 'Monoton_400Regular', file: Monoton_400Regular },
+  creepster: { family: 'Creepster_400Regular', file: Creepster_400Regular },
+  bangers: { family: 'Bangers_400Regular', file: Bangers_400Regular },
+  fascinate: { family: 'Fascinate_400Regular', file: Fascinate_400Regular },
+  sigmar: { family: 'SigmarOne_400Regular', file: SigmarOne_400Regular },
+  lilita: { family: 'LilitaOne_400Regular', file: LilitaOne_400Regular },
+  rubikbubbles: { family: 'RubikBubbles_400Regular', file: RubikBubbles_400Regular },
+  luckiest: { family: 'LuckiestGuy_400Regular', file: LuckiestGuy_400Regular },
+  titan: { family: 'TitanOne_400Regular', file: TitanOne_400Regular },
+  elite: { family: 'SpecialElite_400Regular', file: SpecialElite_400Regular },
+  rocksalt: { family: 'RockSalt_400Regular', file: RockSalt_400Regular },
+  fredericka: { family: 'FrederickatheGreat_400Regular', file: FrederickatheGreat_400Regular },
 };
 
 export const FONT_LABELS: Record<FontKey, string> = {
@@ -45,6 +74,20 @@ export const FONT_LABELS: Record<FontKey, string> = {
   caveat: 'Caveat', merienda: 'Merienda', patrick: 'Patrick', pixel: 'Pixel', kalam: 'Kalam',
   cormorant: 'Cormorant', shrikhand: 'Shrikhand', lobster: 'Lobster', wetpaint: 'Wet paint',
   gloria: 'Gloria', fredoka: 'Fredoka',
+  marker: 'Permanent Marker',
+  bungee: 'Bungee',
+  monoton: 'Monoton',
+  creepster: 'Creepster',
+  bangers: 'Bangers',
+  fascinate: 'Fascinate',
+  sigmar: 'Sigmar One',
+  lilita: 'Lilita One',
+  rubikbubbles: 'Rubik Bubbles',
+  luckiest: 'Luckiest Guy',
+  titan: 'Titan One',
+  elite: 'Special Elite',
+  rocksalt: 'Rock Salt',
+  fredericka: 'Fredericka',
 };
 
 /** Font file map for expo-font's useFonts. */
@@ -60,15 +103,25 @@ export function setCurrentFont(key: FontKey | null | undefined) {
 }
 
 let patched = false;
-/** Makes every <Text> use the theme's font unless a style sets its own. Safe to call more than once. */
+/**
+ * Makes every <Text> use the theme's font unless a style sets its own.
+ * React Native 0.8x builds Text as a plain function component (no .render), so we swap the module's
+ * default export for a thin wrapper. `import { Text } from 'react-native'` reads that export lazily, so
+ * every screen picks it up. Safe to call more than once.
+ */
 export function installTextFont() {
   if (patched) return;
-  const T = Text as unknown as { render?: (props: any, ref: any) => any };
-  const orig = T.render;
-  if (typeof orig !== 'function') return;
-  patched = true;
-  T.render = function patchedRender(this: unknown, props: any, ref: any) {
-    if (!current) return orig.call(this, props, ref);
-    return orig.call(this, { ...props, style: [{ fontFamily: current }, props.style] }, ref);
-  };
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const mod = require('react-native/Libraries/Text/Text') as { default: React.ComponentType<any> };
+    const Orig = mod.default;
+    if (!Orig) return;
+    const Wrapped = (props: any) =>
+      React.createElement(Orig, current ? { ...props, style: [{ fontFamily: current }, props.style] } : props);
+    Wrapped.displayName = 'Text';
+    mod.default = Wrapped as unknown as React.ComponentType<any>;
+    patched = true;
+  } catch {
+    // If React Native ever moves this file, the app still works with the system font.
+  }
 }
