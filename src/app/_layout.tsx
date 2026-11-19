@@ -9,7 +9,7 @@ import { CrashPrompt } from '../components/CrashPrompt';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { ThemeFx } from '../components/ThemeFx';
 import { installCrashHandler } from '../lib/crash';
-import { fontMap, installTextFont, setCurrentFont, type FontKey } from '../lib/fonts';
+import { currentFontFamily, fontMap, installTextFont, setCurrentFont, type FontKey } from '../lib/fonts';
 import { NotificationResponder } from '../components/NotificationResponder';
 import { applyLook, colors } from '../lib/theme';
 import { AppProvider, useApp } from '../state/AppState';
@@ -27,27 +27,27 @@ function Themed() {
   return (
     <React.Fragment key={`${theme.id}|${accent ?? ''}|${corners}|${themeId === 'custom' ? JSON.stringify(customTheme) : ''}`}>
       <StatusBar style={theme.dark ? 'light' : 'dark'} />
-      <Stack screenOptions={{ headerTintColor: colors.text, contentStyle: { backgroundColor: colors.bg } }}>
+      <Stack screenOptions={{ headerTintColor: colors.text, headerTitleStyle: { color: colors.text, fontFamily: currentFontFamily() }, contentStyle: { backgroundColor: colors.bg } }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen
           name="creator"
-          options={{ title: 'Creator', headerStyle: { backgroundColor: colors.bg }, headerTitleStyle: { color: colors.text } }}
+          options={{ title: 'Creator', headerStyle: { backgroundColor: colors.bg }, headerTitleStyle: { color: colors.text, fontFamily: currentFontFamily() } }}
         />
         <Stack.Screen
           name="profile"
-          options={{ title: 'Profile', headerStyle: { backgroundColor: colors.bg }, headerTitleStyle: { color: colors.text } }}
+          options={{ title: 'Profile', headerStyle: { backgroundColor: colors.bg }, headerTitleStyle: { color: colors.text, fontFamily: currentFontFamily() } }}
         />
         <Stack.Screen
           name="profile-edit"
-          options={{ title: 'Edit profile', headerStyle: { backgroundColor: colors.bg }, headerTitleStyle: { color: colors.text } }}
+          options={{ title: 'Edit profile', headerStyle: { backgroundColor: colors.bg }, headerTitleStyle: { color: colors.text, fontFamily: currentFontFamily() } }}
         />
         <Stack.Screen
           name="checkin"
-          options={{ presentation: 'modal', title: 'Check-in', headerStyle: { backgroundColor: colors.bg }, headerTitleStyle: { color: colors.text } }}
+          options={{ presentation: 'modal', title: 'Check-in', headerStyle: { backgroundColor: colors.bg }, headerTitleStyle: { color: colors.text, fontFamily: currentFontFamily() } }}
         />
         <Stack.Screen
           name="emergency"
-          options={{ title: 'Emergency card', headerStyle: { backgroundColor: colors.bg }, headerTitleStyle: { color: colors.text } }}
+          options={{ title: 'Emergency card', headerStyle: { backgroundColor: colors.bg }, headerTitleStyle: { color: colors.text, fontFamily: currentFontFamily() } }}
         />
         <Stack.Screen
           name="med-form"
@@ -55,7 +55,7 @@ function Themed() {
             presentation: 'modal',
             title: 'Medication',
             headerStyle: { backgroundColor: colors.bg },
-            headerTitleStyle: { color: colors.text },
+            headerTitleStyle: { color: colors.text, fontFamily: currentFontFamily() },
           }}
         />
       </Stack>
