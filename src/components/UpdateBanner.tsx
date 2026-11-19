@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { AppState, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
-import { checkForUpdate, dismissUpdate, dismissedVersion, type UpdateInfo } from '../lib/update';
+import { checkForUpdate, dismissUpdate, dismissedVersion, downloadAndInstall, type UpdateInfo } from '../lib/update';
 import { colors, radius, themedStyles } from '../lib/theme';
 
 /** Shows "new version available" with a one-tap download. Android only; checks GitHub Releases. */
 export function UpdateBanner() {
   const [info, setInfo] = useState<UpdateInfo | null>(null);
+  const [progress, setProgress] = useState<number | null>(null);
 
   const check = useCallback(async () => {
     const u = await checkForUpdate();
@@ -23,10 +24,24 @@ export function UpdateBanner() {
   return (
     <View style={styles.box}>
       <Text style={styles.title}>🎉 MedStreak {info.version} is ready!</Text>
-      <Text style={styles.sub}>Tap Update, then open the downloaded file and press Install. Your data stays.</Text>
+      <Text style={styles.sub}>Tap Update now. When Android asks, press Install. Your data stays.</Text>
       <View style={styles.row}>
-        <Pressable style={styles.btn} onPress={() => Linking.openURL(info.url)}>
-          <Text style={styles.btnText}>Update</Text>
+        <Pressable
+          style={[styles.btn, progress !== null && { opacity: 0.6 }]}
+          disabled={progress !== null}
+          onPress={async () => {
+            setProgress(0);
+            try {
+              await downloadAndInstall(info.url, setProgress);
+            } catch {
+              // Couldn't download here (offline, or the phone blocked it): fall back to the browser download.
+              Linking.openURL(info.url).catch(() => {});
+            } finally {
+              setProgress(null);
+            }
+          }}
+        >
+          <Text style={styles.btnText}>{progress === null ? 'Update now' : `Downloading ${Math.round(progress * 100)}%`}</Text>
         </Pressable>
         <Pressable
           style={styles.later}
