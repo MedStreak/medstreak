@@ -1,5 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as IntentLauncher from 'expo-intent-launcher';
 import { Platform } from 'react-native';
 
 const REPO = 'MedStreak/medstreak';
@@ -65,4 +67,25 @@ export async function dismissUpdate(version: string): Promise<void> {
   try {
     await AsyncStorage.setItem(DISMISSED_KEY, version);
   } catch {}
+}
+
+/**
+ * Downloads the new APK inside the app and opens Android's installer. Android never lets an app
+ * install itself silently, so the person taps "Install" once. Their data is kept.
+ */
+export async function downloadAndInstall(url: string, onProgress: (fraction: number) => void): Promise<void> {
+  if (Platform.OS !== 'android') throw new Error('Android only');
+  const dest = `${FileSystem.cacheDirectory}MedStreak-update.apk`;
+  await FileSystem.deleteAsync(dest, { idempotent: true });
+  const dl = FileSystem.createDownloadResumable(url, dest, {}, (p) => {
+    if (p.totalBytesExpectedToWrite > 0) onProgress(p.totalBytesWritten / p.totalBytesExpectedToWrite);
+  });
+  const res = await dl.downloadAsync();
+  if (!res || res.status >= 400) throw new Error('download failed');
+  const contentUri = await FileSystem.getContentUriAsync(res.uri);
+  await IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
+    data: contentUri,
+    flags: 1, // FLAG_GRANT_READ_URI_PERMISSION
+    type: 'application/vnd.android.package-archive',
+  });
 }

@@ -88,6 +88,10 @@ export function computeStreak(
     const s = summarizeDay(active, logs, day, today);
     if (s.status === 'none' || s.status === 'future') continue;
 
+    // Refill tracking: a day with nothing logged at all (didn't open the app) doesn't count against you
+    // when every active medication tracks its pills. It adds nothing toward prizes either.
+    if (s.status === 'missed' && day !== today && (logs[day]?.length ?? 0) === 0 && active.every((m) => m.pillsRemaining !== null)) continue;
+
     // A day frozen on purpose: spends one freeze, keeps the streak, adds nothing.
     // If the day ends up completed anyway, the freeze isn't spent.
     if (s.status !== 'complete' && frozen.includes(day) && shields > 0) {
@@ -197,4 +201,33 @@ export function celebrationMessage(streak: number): string {
   if (streak < 7) return `${streak} days in a row. Keep it rolling!`;
   if (streak < 30) return `${streak}-day streak. You’re on fire!`;
   return `${streak} days straight. Unstoppable!`;
+}
+
+/** Fully completed check-in days needed for each surprise. */
+export const SURPRISE_EVERY = 10;
+
+/** Cute stickers that can be won, shown next to your name on your profile. */
+export const SURPRISE_STICKERS = ['🦚', '🎠', '🧞', '🍡', '🧶', '🐚', '🦩', '🪁', '🧁', '🫖', '🪅', '🦭'];
+
+/**
+ * Days since the last surprise on which every dose was taken. Skipped days (no log at all)
+ * never add to this, and never take away from it.
+ */
+export function surpriseProgress(
+  meds: Medication[],
+  logs: Record<string, DoseKey[]>,
+  base: string | null,
+  today: string,
+): number {
+  const active = meds.filter((m) => m.active);
+  if (active.length === 0) return 0;
+  const first = active.reduce((min, m) => (m.startDate < min ? m.startDate : min), today);
+  const from = base && base >= first ? addDays(base, 1) : first;
+  let n = 0;
+  const total = daysBetween(from, today);
+  for (let i = 0; i <= total; i++) {
+    const day = addDays(from, i);
+    if (summarizeDay(active, logs, day, today).status === 'complete') n++;
+  }
+  return n;
 }

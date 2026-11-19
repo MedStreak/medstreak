@@ -61,6 +61,12 @@ export interface Settings {
   particle: string | null;
   /** Unlockable themes I have earned. */
   unlockedThemes: string[];
+  /** Day (YYYY-MM-DD) the last surprise was opened; check-in days after it count toward the next one. */
+  surpriseBase: string | null;
+  /** Stickers I have earned from surprises. */
+  stickers: string[];
+  /** How many surprises I have opened. */
+  surprisesOpened: number;
 }
 
 export interface Persisted {
