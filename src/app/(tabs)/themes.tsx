@@ -1,10 +1,13 @@
+import * as FileSystem from 'expo-file-system/legacy';
 import * as Haptics from 'expo-haptics';
+import * as ImagePicker from 'expo-image-picker';
 import React from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { PARTICLES, PARTICLE_IDS } from '../../components/ThemeFx';
 import { Card, SectionTitle } from '../../components/ui';
+import { DimSlider } from '../../components/DimSlider';
 import { FONT_FILES, FONT_LABELS, type FontKey } from '../../lib/fonts';
-import { ACCENTS, DEFAULT_CUSTOM, THEMES, colors, getTheme, radius, themedStyles } from '../../lib/theme';
+import { ACCENTS, DEFAULT_CUSTOM, THEMES, colors, getTheme, onPrimary, radius, themedStyles } from '../../lib/theme';
 import { useApp } from '../../state/AppState';
 
 const BG_SWATCHES = ['#FFFFFF', '#FFE3EE', '#FFD6EC', '#FFEBD2', '#FFF3B0', '#E7F7B5', '#C9F7DE', '#CFEFFF', '#DDD0FF', '#F2E6C9', '#1E232B', '#10002B', '#0F2A18', '#183B2C'];
@@ -92,6 +95,36 @@ export default function ThemesScreen() {
       </Pressable>
     );
   };
+  const { bgImage, bgDim, bgSeeThrough } = data.settings;
+  const pickBackground = async () => {
+    try {
+      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!perm.granted) {
+        Alert.alert('Photos needed', 'Allow photo access so you can pick a background.');
+        return;
+      }
+      const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: false, quality: 1 });
+      if (res.canceled || !res.assets?.[0]) return;
+      const a = res.assets[0];
+      if ((a.fileSize ?? 0) > 25 * 1024 * 1024) {
+        Alert.alert('That one is too big', 'Pick a picture or GIF under 25 MB so the app stays smooth.');
+        return;
+      }
+      const isGif = /gif/i.test(a.mimeType ?? '') || /\.gif($|\?)/i.test(a.uri);
+      const ext = isGif ? 'gif' : /png/i.test(a.mimeType ?? '') ? 'png' : 'jpg';
+      const dest = `${FileSystem.documentDirectory}background-${Date.now()}.${ext}`;
+      await FileSystem.copyAsync({ from: a.uri, to: dest });
+      if (bgImage) await FileSystem.deleteAsync(bgImage, { idempotent: true }).catch(() => {});
+      updateSettings({ bgImage: dest });
+    } catch {
+      Alert.alert('Couldn\u2019t use that picture', 'Try a different photo or GIF.');
+    }
+  };
+  const removeBackground = async () => {
+    tap();
+    if (bgImage) await FileSystem.deleteAsync(bgImage, { idempotent: true }).catch(() => {});
+    updateSettings({ bgImage: null });
+  };
   const tabIcons = data.settings.tabIcons ?? {};
   const setTabIcon = (id: string, emoji: string | null) => {
     tap();
@@ -109,7 +142,7 @@ export default function ThemesScreen() {
       <View style={styles.filterRow}>
         {FILTERS.map((f) => (
           <Pressable key={f.id} onPress={() => { tap(); setFilter(f.id); }} style={[styles.chip, filter === f.id && styles.chipOn]}>
-            <Text style={[styles.chipText, filter === f.id && { color: '#fff' }]}>{f.label}</Text>
+            <Text style={[styles.chipText, filter === f.id && { color: onPrimary() }]}>{f.label}</Text>
           </Pressable>
         ))}
       </View>
@@ -130,6 +163,35 @@ export default function ThemesScreen() {
         <View style={styles.themeGrid}>{THEMES.filter(FILTERS.find((f) => f.id === filter)!.test).map(renderTile)}</View>
       )}
 
+      <SectionTitle>Custom background</SectionTitle>
+      <Text style={styles.sub}>Use your own photo or GIF behind the whole app. It stays on your phone and is never uploaded.</Text>
+      <View style={styles.bgRow}>
+        <View style={styles.bgPreview}>
+          {bgImage ? <Image source={{ uri: bgImage }} resizeMode="cover" style={StyleSheet.absoluteFill} /> : <Text style={styles.bgEmpty}>None</Text>}
+          {bgImage ? <View style={[StyleSheet.absoluteFill, { backgroundColor: '#000', opacity: (bgDim ?? 25) / 100 }]} /> : null}
+        </View>
+        <View style={{ flex: 1, gap: 8 }}>
+          <Pressable onPress={pickBackground} style={[styles.chip, styles.bgBtn, { backgroundColor: colors.primary }]}>
+            <Text style={[styles.chipText, { color: onPrimary() }]}>{bgImage ? 'Change photo or GIF' : 'Pick photo or GIF'}</Text>
+          </Pressable>
+          {bgImage ? (
+            <Pressable onPress={removeBackground} style={[styles.chip, styles.bgBtn]}>
+              <Text style={styles.chipText}>Remove</Text>
+            </Pressable>
+          ) : null}
+        </View>
+      </View>
+      {bgImage ? (
+        <>
+          <Text style={styles.label}>Dim the picture so text stays readable</Text>
+          <DimSlider value={bgDim ?? 25} max={80} onChange={(v) => updateSettings({ bgDim: v })} />
+          <View style={styles.bgToggle}>
+            <Text style={styles.bgToggleText}>Cards see-through a little</Text>
+            <Switch value={!!bgSeeThrough} onValueChange={(v) => { tap(); updateSettings({ bgSeeThrough: v }); }} trackColor={{ true: colors.primary }} />
+          </View>
+        </>
+      ) : null}
+
       <SectionTitle>Particles</SectionTitle>
       <Text style={styles.sub}>Falling, rising or drifting things on top of any theme.</Text>
       <View style={styles.chipRow}>
@@ -143,7 +205,7 @@ export default function ThemesScreen() {
             }}
             style={[styles.chip, particle === o.id && styles.chipOn]}
           >
-            <Text style={[styles.chipText, particle === o.id && { color: '#fff' }]}>
+            <Text style={[styles.chipText, particle === o.id && { color: onPrimary() }]}>
               {o.icon} {o.label}
             </Text>
           </Pressable>
@@ -174,7 +236,7 @@ export default function ThemesScreen() {
       <View style={styles.chipRow}>
         {(Object.keys(FONT_LABELS) as FontKey[]).map((f) => (
           <Pressable key={f} onPress={() => setCustom({ font: f })} style={[styles.chip, current === 'custom' && ct.font === f && styles.chipOn]}>
-            <Text style={[styles.chipText, { fontFamily: FONT_FILES[f].family }, current === 'custom' && ct.font === f && { color: '#fff' }]}>{FONT_LABELS[f]}</Text>
+            <Text style={[styles.chipText, { fontFamily: FONT_FILES[f].family }, current === 'custom' && ct.font === f && { color: onPrimary() }]}>{FONT_LABELS[f]}</Text>
           </Pressable>
         ))}
       </View>
@@ -206,7 +268,7 @@ export default function ThemesScreen() {
       <View style={styles.chipRow}>
         {SPEEDS.map((o) => (
           <Pressable key={o.label} onPress={() => setCustom({ speed: o.v })} style={[styles.chip, current === 'custom' && ct.speed === o.v && styles.chipOn]}>
-            <Text style={[styles.chipText, current === 'custom' && ct.speed === o.v && { color: '#fff' }]}>{o.label}</Text>
+            <Text style={[styles.chipText, current === 'custom' && ct.speed === o.v && { color: onPrimary() }]}>{o.label}</Text>
           </Pressable>
         ))}
       </View>
@@ -249,7 +311,7 @@ export default function ThemesScreen() {
               }}
               style={[styles.cornerBox, { borderRadius: c.r }, on && styles.cornerOn]}
             >
-              <Text style={[styles.cornerText, on && { color: '#fff' }]}>{c.label}</Text>
+              <Text style={[styles.cornerText, on && { color: onPrimary() }]}>{c.label}</Text>
             </Pressable>
           );
         })}
@@ -305,5 +367,11 @@ const styles = themedStyles(() =>
     cornerBox: { flex: 1, paddingVertical: 16, alignItems: 'center', backgroundColor: colors.chipBg },
     cornerOn: { backgroundColor: colors.primary },
     cornerText: { fontWeight: '800', color: colors.text },
+    bgRow: { flexDirection: 'row', gap: 12, alignItems: 'center', marginTop: 10 },
+    bgPreview: { width: 112, height: 120, borderRadius: 14, overflow: 'hidden', backgroundColor: colors.chipBg, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.border },
+    bgEmpty: { color: colors.muted, fontWeight: '700' },
+    bgBtn: { alignItems: 'center', paddingVertical: 12 },
+    bgToggle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 },
+    bgToggleText: { color: colors.text, fontWeight: '700', fontSize: 15 },
   }),
 );
