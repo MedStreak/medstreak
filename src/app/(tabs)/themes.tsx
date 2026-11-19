@@ -3,12 +3,26 @@ import React from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { PARTICLES, PARTICLE_IDS } from '../../components/ThemeFx';
 import { Card, SectionTitle } from '../../components/ui';
-import { FONT_LABELS, type FontKey } from '../../lib/fonts';
-import { ACCENTS, DEFAULT_CUSTOM, THEMES, colors, themedStyles } from '../../lib/theme';
+import { FONT_FILES, FONT_LABELS, type FontKey } from '../../lib/fonts';
+import { ACCENTS, DEFAULT_CUSTOM, THEMES, colors, getTheme, radius, themedStyles } from '../../lib/theme';
 import { useApp } from '../../state/AppState';
 
 const BG_SWATCHES = ['#FFFFFF', '#FFE3EE', '#FFD6EC', '#FFEBD2', '#FFF3B0', '#E7F7B5', '#C9F7DE', '#CFEFFF', '#DDD0FF', '#F2E6C9', '#1E232B', '#10002B', '#0F2A18', '#183B2C'];
 const TEXT_SWATCHES = ['#1F2430', '#4A1530', '#2B1B4D', '#0F3340', '#12382A', '#4A3A1A', '#FFFFFF', '#FFF35C', '#E5FFD1', '#7DF9FF'];
+const TAB_NAMES = [
+  { id: 'index', label: 'Today', def: '🏠' },
+  { id: 'meds', label: 'Meds', def: '💊' },
+  { id: 'calendar', label: 'History', def: '🗓️' },
+  { id: 'goals', label: 'Goals', def: '🏆' },
+  { id: 'chat', label: 'Cheers', def: '🦄' },
+  { id: 'themes', label: 'Themes', def: '🎨' },
+];
+const TAB_EMOJIS = (
+  '🏠 🏡 🛖 ⭐ 🌟 ✨ 💫 🔥 ⚡ 🌈 ☀️ 🌙 🌸 🌼 🌻 🌿 🍀 🍄 🌵 🌴 🌊 ❄️ 🍎 🍒 🍓 🍉 🍕 🍩 🧁 🍪 ☕ 🧋 ' +
+  '💊 💉 🩹 🩺 🧬 🫀 🧠 🦷 💚 💙 💜 🧡 💛 ❤️ 🖤 🤍 💖 💝 🏆 🥇 🎯 🎮 🕹️ 🎸 🥁 🎧 🎵 🎤 🎨 🖌️ 📚 📝 ' +
+  '🗓️ 📅 ⏰ ⏳ 🔔 🔑 🧭 🗺️ 🚀 🛸 🪐 🌍 ⚓ 🛟 🔧 🔨 ⚙️ 🛠️ 💎 👑 🎩 🧢 🕶️ 🦄 🐉 🦋 🐝 🐞 🐢 🦊 🐼 🐱 🐶 🐙 🦈 🐬 🦉 🐧 🦖 👾 🤖 👻 💀 ☮️ ✌️ 🧿 🪬 🔮 🎁 🎈 🎉'
+).split(' ');
+
 const SPEEDS = [
   { label: 'Slow', v: 0.6 },
   { label: 'Normal', v: 1 },
@@ -30,6 +44,15 @@ export default function ThemesScreen() {
     updateSettings({ theme: 'custom', customTheme: { ...ct, ...patch } });
   };
   const tap = () => Haptics.selectionAsync().catch(() => {});
+  const [pickTab, setPickTab] = React.useState('index');
+  const tabIcons = data.settings.tabIcons ?? {};
+  const setTabIcon = (id: string, emoji: string | null) => {
+    tap();
+    const next = { ...tabIcons };
+    if (emoji) next[id] = emoji;
+    else delete next[id];
+    updateSettings({ tabIcons: next });
+  };
 
   return (
     <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content}>
@@ -121,10 +144,34 @@ export default function ThemesScreen() {
       <View style={styles.chipRow}>
         {(Object.keys(FONT_LABELS) as FontKey[]).map((f) => (
           <Pressable key={f} onPress={() => setCustom({ font: f })} style={[styles.chip, current === 'custom' && ct.font === f && styles.chipOn]}>
-            <Text style={[styles.chipText, current === 'custom' && ct.font === f && { color: '#fff' }]}>{FONT_LABELS[f]}</Text>
+            <Text style={[styles.chipText, { fontFamily: FONT_FILES[f].family }, current === 'custom' && ct.font === f && { color: '#fff' }]}>{FONT_LABELS[f]}</Text>
           </Pressable>
         ))}
       </View>
+      <Text style={styles.label}>Tab bar icons</Text>
+      <Text style={styles.sub}>Tap a tab, then pick any emoji for it. This works with every theme.</Text>
+      <View style={styles.tabBarPreview}>
+        {TAB_NAMES.map((t) => {
+          const on = pickTab === t.id;
+          const emoji = tabIcons[t.id] || (t.id === 'index' ? getTheme(current).mascot : t.def);
+          return (
+            <Pressable key={t.id} onPress={() => setPickTab(t.id)} style={[styles.tabPrev, on && styles.tabPrevOn]}>
+              <Text style={{ fontSize: 24 }}>{emoji}</Text>
+              <Text style={styles.tabPrevLabel}>{t.label}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+      <View style={styles.emojiGrid}>
+        {TAB_EMOJIS.map((e) => (
+          <Pressable key={e} onPress={() => setTabIcon(pickTab, e)} style={[styles.emojiCell, tabIcons[pickTab] === e && styles.emojiCellOn]}>
+            <Text style={{ fontSize: 24 }}>{e}</Text>
+          </Pressable>
+        ))}
+      </View>
+      <Pressable onPress={() => updateSettings({ tabIcons: {} })} style={[styles.chip, { alignSelf: 'flex-start', marginTop: 10 }]}>
+        <Text style={styles.chipText}>Reset tab icons</Text>
+      </Pressable>
       <Text style={styles.label}>Particle speed</Text>
       <View style={styles.chipRow}>
         {SPEEDS.map((o) => (
@@ -202,6 +249,13 @@ const styles = themedStyles(() =>
     autoText: { fontWeight: '800', color: colors.text },
     label: { fontWeight: '800', color: colors.text, marginTop: 14 },
     swatchBorder: { borderColor: colors.border },
+    tabBarPreview: { flexDirection: 'row', justifyContent: 'space-around', backgroundColor: colors.card, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, paddingVertical: 8, marginTop: 10 },
+    tabPrev: { alignItems: 'center', paddingVertical: 4, paddingHorizontal: 6, borderRadius: 12, borderWidth: 2, borderColor: 'transparent' },
+    tabPrevOn: { borderColor: colors.primary, backgroundColor: colors.chipBg },
+    tabPrevLabel: { fontSize: 10, color: colors.muted, fontWeight: '700' },
+    emojiGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 12 },
+    emojiCell: { width: 44, height: 44, borderRadius: 12, backgroundColor: colors.chipBg, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: 'transparent' },
+    emojiCellOn: { borderColor: colors.primary },
     chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 },
     chip: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 16, backgroundColor: colors.chipBg },
     chipOn: { backgroundColor: colors.primary },

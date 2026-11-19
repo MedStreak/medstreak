@@ -6,11 +6,14 @@ import { Button, Card, ProgressBar, SectionTitle } from '../../components/ui';
 import { formatTime } from '../../lib/dates';
 import { colors, getTheme, themedStyles } from '../../lib/theme';
 import { SURPRISE_EVERY, dosesForDay, motivationalMessage, nextMilestone } from '../../lib/streak';
+import { useMoodLogs } from '../../lib/wellbeing';
 import { useApp } from '../../state/AppState';
 
 export default function TodayScreen() {
   const { data, today, streak, surprise, toggleDose, answerPrompt, updateSettings } = useApp();
   const router = useRouter();
+  const { logs: moods } = useMoodLogs();
+  const todayMood = moods[today];
   const slots = dosesForDay(data.meds, today);
   const done = new Set(data.logs[today] ?? []);
   const takenCount = slots.filter((s) => done.has(s.key)).length;
@@ -71,6 +74,17 @@ export default function TodayScreen() {
           {surprise} / {SURPRISE_EVERY} check-in days. Every full day counts. Skipped days never hurt you, they just don’t add. 🌱
         </Text>
       </Card>
+
+      <View style={styles.quickRow}>
+        <Pressable style={styles.quick} onPress={() => router.push('/checkin')}>
+          <Text style={styles.quickEmoji}>{todayMood?.mood || '🙂'}</Text>
+          <Text style={styles.quickText}>{todayMood ? 'Update check-in' : 'How are you feeling?'}</Text>
+        </Pressable>
+        <Pressable style={styles.quick} onPress={() => router.push('/emergency')}>
+          <Text style={styles.quickEmoji}>🚑</Text>
+          <Text style={styles.quickText}>Emergency card</Text>
+        </Pressable>
+      </View>
 
       <Text style={styles.flair}>{flair}</Text>
       <Text style={styles.mascotLine}>{mascotLine}</Text>
@@ -140,6 +154,10 @@ export default function TodayScreen() {
 
 const styles = themedStyles(() => StyleSheet.create({
   container: { padding: 16, paddingBottom: 40 },
+  quickRow: { flexDirection: 'row', gap: 10, marginBottom: 12 },
+  quick: { flex: 1, backgroundColor: colors.card, borderRadius: 16, borderWidth: 1, borderColor: colors.border, padding: 12, alignItems: 'center' },
+  quickEmoji: { fontSize: 30 },
+  quickText: { color: colors.text, fontWeight: '700', marginTop: 4, textAlign: 'center' },
   flair: { textAlign: 'center', fontSize: 22, marginBottom: 4 },
   mascotLine: { textAlign: 'center', color: colors.text, fontWeight: '800', fontSize: 15, marginBottom: 8 },
   surpriseTitle: { fontSize: 16, fontWeight: '800', color: colors.text, marginBottom: 8 },
