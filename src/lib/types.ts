@@ -71,6 +71,12 @@ export interface Settings {
   surprisesOpened: number;
   /** Custom tab bar icons (emoji) by tab name; missing = default. */
   tabIcons: Record<string, string>;
+  /** Custom background picture or GIF (a file kept on this phone), or null. */
+  bgImage: string | null;
+  /** How much to darken the background picture, 0 to 80 percent. */
+  bgDim: number;
+  /** Let the background picture show faintly through cards. */
+  bgSeeThrough: boolean;
 }
 
 export interface Persisted {

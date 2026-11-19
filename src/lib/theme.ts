@@ -246,6 +246,14 @@ export const DEFAULT_THEME_ID = 'sunrise';
 
 /** Live palette. Values are swapped in place by applyLook(); screens read it while rendering. */
 export const colors: Palette = { ...THEMES[0].colors };
+/** Readable text colour (dark or white) for something drawn on the current primary colour. */
+export function onPrimary(): string {
+  const hex = colors.primary.replace('#', '');
+  const n = parseInt(hex.length === 3 ? hex.split('').map((c) => c + c).join('') : hex.slice(0, 6), 16);
+  const lin = (v: number) => { const x = v / 255; return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); };
+  const lum = 0.2126 * lin((n >> 16) & 255) + 0.7152 * lin((n >> 8) & 255) + 0.0722 * lin(n & 255);
+  return lum > 0.45 ? '#1A1228' : '#FFFFFF';
+}
 /** Live corner radii (also swapped in place). */
 export const radius = { ...CORNER_SETS.soft };
 
@@ -257,11 +265,24 @@ export function getTheme(id: string, custom?: CustomTheme): ThemeDef {
   return THEMES.find((t) => t.id === id) ?? THEMES[0];
 }
 
-export interface Look { theme: string; accent: string | null; corners: string; custom?: CustomTheme }
+export interface Look { theme: string; accent: string | null; corners: string; custom?: CustomTheme; bgImage?: boolean; seeThrough?: boolean }
+
+let bgActive = false;
+/** Background for screens and headers: see-through when a custom background picture is on. */
+export function sceneBg(): string {
+  return bgActive ? 'transparent' : colors.bg;
+}
+
+function withAlpha(hex: string, a: number): string {
+  const h = hex.replace('#', '');
+  const f = h.length === 3 ? h.split('').map((c) => c + c).join('') : h.slice(0, 6);
+  const n = parseInt(f, 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
+}
 
 export function applyLook(look: Look): ThemeDef {
   const t = getTheme(look.theme, look.custom);
-  const key = `${t.id}|${look.accent ?? ''}|${look.corners}|${look.theme === 'custom' ? JSON.stringify(look.custom) : ''}`;
+  const key = `${t.id}|${look.accent ?? ''}|${look.corners}|${look.theme === 'custom' ? JSON.stringify(look.custom) : ''}|${look.bgImage ? (look.seeThrough ? 'bgs' : 'bg') : ''}`;
   if (key !== currentKey) {
     Object.assign(colors, t.colors);
     const ac = ACCENTS.find((x) => x.id === look.accent);
@@ -270,6 +291,8 @@ export function applyLook(look: Look): ThemeDef {
       colors.primaryDark = ac.dark;
       colors.hero = ac.color;
     }
+    bgActive = !!look.bgImage;
+    if (bgActive && look.seeThrough) colors.card = withAlpha(colors.card, 0.82);
     Object.assign(radius, CORNER_SETS[(look.corners as Corners) in CORNER_SETS ? (look.corners as Corners) : 'soft']);
     currentKey = key;
     version += 1;

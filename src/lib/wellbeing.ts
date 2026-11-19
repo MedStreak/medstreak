@@ -66,16 +66,18 @@ const CARD_KEY = 'medstreak:emergency';
 
 export function useEmergencyCard() {
   const [card, setCard] = useState<EmergencyCard>(EMPTY_CARD);
+  const [loaded, setLoaded] = useState(false);
   useFocusEffect(
     useCallback(() => {
       AsyncStorage.getItem(CARD_KEY)
         .then((raw) => setCard({ ...EMPTY_CARD, ...(raw ? (JSON.parse(raw) as Partial<EmergencyCard>) : {}) }))
-        .catch(() => {});
+        .catch(() => {})
+        .finally(() => setLoaded(true));
     }, []),
   );
   const save = useCallback(async (next: EmergencyCard) => {
     setCard(next);
     await AsyncStorage.setItem(CARD_KEY, JSON.stringify(next)).catch(() => {});
   }, []);
-  return { card, save };
+  return { card, save, loaded };
 }
