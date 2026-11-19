@@ -5,17 +5,27 @@ import { UpdateBanner } from '../../components/UpdateBanner';
 import { Button, Card, ProgressBar, SectionTitle } from '../../components/ui';
 import { formatTime } from '../../lib/dates';
 import { colors, getTheme, themedStyles } from '../../lib/theme';
-import { dosesForDay, motivationalMessage, nextMilestone } from '../../lib/streak';
+import { SURPRISE_EVERY, dosesForDay, motivationalMessage, nextMilestone } from '../../lib/streak';
 import { useApp } from '../../state/AppState';
 
 export default function TodayScreen() {
-  const { data, today, streak, toggleDose, answerPrompt, updateSettings } = useApp();
+  const { data, today, streak, surprise, toggleDose, answerPrompt, updateSettings } = useApp();
   const router = useRouter();
   const slots = dosesForDay(data.meds, today);
   const done = new Set(data.logs[today] ?? []);
   const takenCount = slots.filter((s) => done.has(s.key)).length;
   const next = nextMilestone(streak.current);
   const frozen = data.settings.frozenDays.includes(today);
+  const th = getTheme(data.settings.theme);
+  const flair = `${th.emoji} ✨ ${th.mascot} ✨ ${th.emoji}`;
+  const mascotLine =
+    slots.length === 0
+      ? `${th.mascot} is ready whenever you are!`
+      : takenCount >= slots.length
+        ? `${th.mascot} is doing a happy dance! Everything’s taken today 💃`
+        : takenCount > 0
+          ? `${th.mascot} says: so close! ${slots.length - takenCount} to go 💪`
+          : `${th.mascot} is cheering you on 📣`;
 
   const lowSupply = data.meds.filter((m) => {
     if (!m.active || m.pillsRemaining === null) return false;
@@ -54,6 +64,16 @@ export default function TodayScreen() {
         )}
       </Card>
 
+      <Card>
+        <Text style={styles.surpriseTitle}>🎁 Surprise progress</Text>
+        <ProgressBar fraction={surprise / SURPRISE_EVERY} color={colors.primary} />
+        <Text style={styles.surpriseText}>
+          {surprise} / {SURPRISE_EVERY} check-in days. Every full day counts. Skipped days never hurt you, they just don’t add. 🌱
+        </Text>
+      </Card>
+
+      <Text style={styles.flair}>{flair}</Text>
+      <Text style={styles.mascotLine}>{mascotLine}</Text>
       <Text style={styles.quote}>“{motivationalMessage()}”</Text>
 
       {lowSupply.map((m) => (
@@ -120,6 +140,10 @@ export default function TodayScreen() {
 
 const styles = themedStyles(() => StyleSheet.create({
   container: { padding: 16, paddingBottom: 40 },
+  flair: { textAlign: 'center', fontSize: 22, marginBottom: 4 },
+  mascotLine: { textAlign: 'center', color: colors.text, fontWeight: '800', fontSize: 15, marginBottom: 8 },
+  surpriseTitle: { fontSize: 16, fontWeight: '800', color: colors.text, marginBottom: 8 },
+  surpriseText: { color: colors.muted, marginTop: 8, lineHeight: 19, fontSize: 13 },
   streakCard: { backgroundColor: colors.hero, alignItems: 'center', borderColor: colors.hero, paddingVertical: 22 },
   flame: { fontSize: 40 },
   streakNum: { fontSize: 64, fontWeight: '900', color: '#fff', lineHeight: 70 },
