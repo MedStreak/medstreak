@@ -9,22 +9,25 @@ import { useApp } from '../state/AppState';
 /** Emergency card: what a paramedic or ER nurse needs. Saved on this phone only. */
 export default function Emergency() {
   const { data } = useApp();
-  const { card, save } = useEmergencyCard();
+  const { card, save, loaded } = useEmergencyCard();
   const [draft, setDraft] = useState<EmergencyCard>(EMPTY_CARD);
   const [editing, setEditing] = useState(false);
   const [ready, setReady] = useState(false);
 
+  // Wait until the saved card has been read from the phone, then show it (or the empty form the very first time).
   useEffect(() => {
+    if (!loaded) return;
     setDraft(card);
-    const empty = JSON.stringify(card) === JSON.stringify(EMPTY_CARD);
     if (!ready) {
-      setEditing(empty);
+      setEditing(JSON.stringify(card) === JSON.stringify(EMPTY_CARD));
       setReady(true);
     }
-  }, [card, ready]);
+  }, [card, loaded, ready]);
 
   const meds = data.meds.filter((m) => m.active);
   const set = (k: keyof EmergencyCard) => (v: string) => setDraft((d) => ({ ...d, [k]: v }));
+
+  if (!ready) return <View style={{ flex: 1 }} />;
 
   if (editing) {
     return (

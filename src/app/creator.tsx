@@ -3,9 +3,12 @@ import { Linking, ScrollView, StyleSheet, Text } from 'react-native';
 import { Button, Card } from '../components/ui';
 import { colors, themedStyles } from '../lib/theme';
 
-/** Why MedStreak exists. The story text is written by the creator; update CREATOR_STORY below. */
-const CREATOR_STORY =
-  'This page is waiting for the creator to tell the story of why MedStreak was made. It will be added in an upcoming update.';
+/** Why MedStreak exists, in the creator's own words. */
+const CREATOR_STORY = [
+  'Why did I create MedStreak? Honestly because I needed it. I struggle personally ALOT when it comes to medication management, reminding myself to take my meds etc. The whole goal was to create something extremely useful but still make it fun, something I\u2019d look forward to opening daily.',
+  'This app is FREE for anyone with an ANDROID device & eventually I\u2019d love to have it uploaded to the Google Play App Store.. But it all comes at a cost. Regardless, with that in mind, this app was created to be CUSTOMIZED. I personally hate how boring most apps seem and look. Just truly gag worthy grey.',
+  'I figured if I could really use this app maybe someone else could too! So that\u2019s the mission now: to spread the word, the peace & love! \u270c\ufe0f',
+];
 
 export default function CreatorScreen() {
   return (
@@ -13,7 +16,9 @@ export default function CreatorScreen() {
       <Text style={styles.emoji}>💊</Text>
       <Text style={styles.title}>Why I made MedStreak</Text>
       <Card>
-        <Text style={styles.body}>{CREATOR_STORY}</Text>
+        {CREATOR_STORY.map((para, i) => (
+          <Text key={i} style={[styles.body, i > 0 && { marginTop: 12 }]}>{para}</Text>
+        ))}
       </Card>
       <Card>
         <Text style={styles.name}>Made by NesrynAstraRose</Text>
