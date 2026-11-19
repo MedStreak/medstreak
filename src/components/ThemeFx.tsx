@@ -8,7 +8,7 @@ export type ParticleId =
   | 'petals' | 'flowers' | 'leaves' | 'snow' | 'rain' | 'stars' | 'sparkles' | 'hearts' | 'bubbles'
   | 'butterflies' | 'fireflies' | 'lanterns' | 'clouds' | 'confetti' | 'peace' | 'notes' | 'moons'
   | 'pills' | 'embers' | 'mushrooms' | 'rainbows' | 'doves' | 'spirals' | 'seeds' | 'smoke'
-  | 'greenleaf' | 'stonermix' | 'none';
+  | 'greenleaf' | 'stonermix' | 'sparks' | 'deepbubbles' | 'code' | 'starfield' | 'storm' | 'none';
 
 interface Cfg {
   label: string;
@@ -52,6 +52,11 @@ export const PARTICLES: Record<Exclude<ParticleId, 'none'>, Cfg> = {
   seeds: { label: 'Seeds', icon: '✺', glyphs: ['✺', '✧'], mode: 'fall', size: [14, 24], dur: [9000, 15000], sway: 40, spin: true, opacity: 0.95, count: 14, color: '#FFFFFF' },
   smoke: { label: 'Smoke', icon: '💨', glyphs: ['💨', '☁️', '💨'], mode: 'rise', size: [18, 40], dur: [9000, 16000], sway: 30, spin: false, opacity: 0.7, count: 10 },
   greenleaf: { label: 'Green leaves', icon: '🌿', glyphs: ['🌿', '🍃', '☘️', '🌿'], mode: 'fall', size: [16, 30], dur: [8000, 14000], sway: 34, spin: true, opacity: 0.95, count: 14 },
+  sparks: { label: 'Sparks', icon: '⚡', glyphs: ['▪', '■', '▪'], mode: 'rise', size: [5, 10], dur: [2500, 5000], sway: 30, spin: false, opacity: 0.95, count: 22, color: '#FF8A2A', glow: '#FFB04A' },
+  deepbubbles: { label: 'Deep bubbles', icon: '🫧', glyphs: ['○', '◌', '○'], mode: 'rise', size: [14, 40], dur: [8000, 15000], sway: 22, spin: false, opacity: 0.8, count: 14, color: '#7FF5E0' },
+  code: { label: 'Code rain', icon: '💻', glyphs: ['1', '0', '7', '3', 'A', 'F', '0', '1'], mode: 'fall', size: [12, 18], dur: [3500, 7000], sway: 0, spin: false, opacity: 0.85, count: 28, color: '#39FF6A', glow: '#39FF6A' },
+  starfield: { label: 'Starfield', icon: '✨', glyphs: ['·', '✦', '·', '•'], mode: 'fall', size: [8, 16], dur: [14000, 26000], sway: 4, spin: false, opacity: 0.9, count: 30, color: '#FFFFFF' },
+  storm: { label: 'Storm rain', icon: '⛈️', glyphs: ['╲', '╲', '╲'], mode: 'fall', size: [14, 24], dur: [900, 1600], sway: 0, spin: false, opacity: 0.65, count: 30, color: '#9FB4CC' },
   stonermix: { label: 'Chill mix', icon: '🚬', glyphs: ['🌿', '🍃', '🚬', '💨', '🍄', '🌿', '🚬'], mode: 'fall', size: [16, 30], dur: [8000, 14000], sway: 30, spin: true, opacity: 0.95, count: 16 },
 };
 
@@ -164,6 +169,27 @@ function Aurora() {
   );
 }
 
+function Lightning() {
+  const a = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    let stop = false;
+    let timer: ReturnType<typeof setTimeout>;
+    const strike = () => {
+      if (stop) return;
+      Animated.sequence([
+        Animated.timing(a, { toValue: 0.32, duration: 70, useNativeDriver: true }),
+        Animated.timing(a, { toValue: 0, duration: 90, useNativeDriver: true }),
+        Animated.timing(a, { toValue: 0.22, duration: 60, useNativeDriver: true }),
+        Animated.timing(a, { toValue: 0, duration: 260, useNativeDriver: true }),
+      ]).start();
+      timer = setTimeout(strike, 5000 + Math.random() * 7000);
+    };
+    timer = setTimeout(strike, 2500);
+    return () => { stop = true; clearTimeout(timer); };
+  }, [a]);
+  return <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: '#FFFFFF', opacity: a }]} />;
+}
+
 const WASH = ['#FF2D95', '#FF8A3D', '#F2D21E', '#2ECC71', '#38A9F5', '#8B5CF6'];
 
 function RainbowWash() {
@@ -203,7 +229,7 @@ export function ThemeFx({ fx, particle, speed = 1 }: { fx?: Fx; particle?: strin
   if (!fx && !pid) return null;
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-      {fx === 'aurora' ? <Aurora /> : fx === 'rainbow' ? <RainbowWash /> : null}
+      {fx === 'aurora' ? <Aurora /> : fx === 'rainbow' ? <RainbowWash /> : fx === 'lightning' ? <Lightning /> : null}
       {pid ? <Particles id={pid} speed={speed} /> : null}
     </View>
   );
