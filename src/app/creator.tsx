@@ -1,7 +1,8 @@
 import React from 'react';
-import { Linking, ScrollView, StyleSheet, Text } from 'react-native';
+import { Linking, ScrollView, Share, StyleSheet, Text } from 'react-native';
 import { Button, Card } from '../components/ui';
 import { colors, themedStyles } from '../lib/theme';
+import { latestApkUrl } from '../lib/update';
 
 /** Why MedStreak exists, in the creator's own words. */
 const CREATOR_STORY = [
@@ -11,6 +12,21 @@ const CREATOR_STORY = [
 ];
 
 export default function CreatorScreen() {
+  const [sharing, setSharing] = React.useState(false);
+  const shareApp = async () => {
+    if (sharing) return;
+    setSharing(true);
+    try {
+      const link = await latestApkUrl();
+      await Share.share({
+        message: `I use MedStreak to keep up with my meds. It's free, ad-free and customizable. Get it here: ${link}`,
+      });
+    } catch {
+      // Share sheet closed or unavailable: nothing to do.
+    } finally {
+      setSharing(false);
+    }
+  };
   return (
     <ScrollView contentContainerStyle={styles.content}>
       <Text style={styles.emoji}>💊</Text>
@@ -19,6 +35,11 @@ export default function CreatorScreen() {
         {CREATOR_STORY.map((para, i) => (
           <Text key={i} style={[styles.body, i > 0 && { marginTop: 12 }]}>{para}</Text>
         ))}
+      </Card>
+      <Card>
+        <Text style={styles.name}>Spread the word</Text>
+        <Text style={styles.body}>Know someone who forgets their meds too? Share MedStreak with them.</Text>
+        <Button title={sharing ? 'Getting the link…' : 'Share MedStreak'} style={{ marginTop: 12 }} onPress={shareApp} />
       </Card>
       <Card>
         <Text style={styles.name}>Made by NesrynAstraRose</Text>
