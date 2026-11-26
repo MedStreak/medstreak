@@ -17,6 +17,10 @@ export function NotificationResponder() {
     if (handled.current === id) return;
     handled.current = id;
 
+    // Clear the notification from the tray once it has been acted on (Android leaves it there otherwise).
+    Notifications.dismissNotificationAsync(response.notification.request.identifier).catch(() => {});
+    Notifications.clearLastNotificationResponse?.();
+
     const payload = response.notification.request.content.data as
       | { type?: string; medId?: string; time?: string }
       | undefined;
