@@ -55,6 +55,25 @@ export async function checkForUpdate(): Promise<UpdateInfo | null> {
   }
 }
 
+/** Direct download link of the newest release's APK (looked up when sharing). Falls back to the releases page if offline. */
+export async function latestApkUrl(): Promise<string> {
+  const fallback = `https://github.com/${REPO}/releases/latest`;
+  try {
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), 6000);
+    const res = await fetch(`https://api.github.com/repos/${REPO}/releases/latest`, {
+      headers: { Accept: 'application/vnd.github+json' },
+      signal: ctl.signal,
+    });
+    clearTimeout(timer);
+    if (!res.ok) return fallback;
+    const rel = (await res.json()) as { assets?: { name: string; browser_download_url: string }[] };
+    return rel.assets?.find((x) => x.name.toLowerCase().endsWith('.apk'))?.browser_download_url ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 /** Manual check for the Updates card: ignores the 30-minute pause and says why when there's nothing to install. */
 export async function checkNow(): Promise<UpdateInfo | 'current' | 'error'> {
   try {
